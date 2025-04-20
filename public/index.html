@@ -49,8 +49,24 @@
         }
       }
 
+      /* PWA mode specific styling */
       @media (display-mode: standalone) {
         body {
+          padding-top: 0 !important;
+          margin-top: 0 !important;
+          border-top: none !important;
+        }
+
+        /* Add status bar spacer */
+        .pwa-status-bar-spacer {
+          display: block !important;
+          height: env(safe-area-inset-top, 20px) !important;
+          width: 100% !important;
+          background-color: rgba(15, 23, 42, 0.95); /* Dark blue that works in both themes */
+        }
+
+        /* Adjust header for status bar */
+        #root header {
           padding-top: 0 !important;
           margin-top: 0 !important;
         }
@@ -59,7 +75,6 @@
         #root header {
           min-height: 50px !important;
           height: auto !important;
-          padding-top: 0 !important;
         }
 
         /* Ensure buttons are large enough to tap */

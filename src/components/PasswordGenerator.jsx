@@ -916,6 +916,9 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
       {/* Add ref to the top section for scrolling */}
       <div ref={topRef}></div>
 
+      {/* PWA Status Bar Spacer - NEW */}
+      <div className="pwa-status-bar-spacer"></div>
+
       {/* Enhanced Security Banner */}
       <div className={`${darkMode ? 'bg-green-900/30 border-green-800/30' : 'bg-green-50 border-green-200'} border-b px-4 py-3 text-sm flex items-center justify-between ${showSecurityInfo ? '' : 'cursor-pointer hover:bg-green-800/20'}`}
         onClick={() => !showSecurityInfo && setShowSecurityInfo(true)}>
@@ -2575,6 +2578,30 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
       .pt-safe {
         padding-top: env(safe-area-inset-top) !important;
       }
+    }
+  }
+
+  /* PWA status bar spacer - only visible in standalone mode */
+  .pwa-status-bar-spacer {
+    display: none;
+    height: 0;
+  }
+
+  @media (display-mode: standalone) {
+    .pwa-status-bar-spacer {
+      display: block;
+      height: env(safe-area-inset-top, 20px);
+      background-color: ${darkMode ? '#0f172a' : '#e0e7ff'};
+      width: 100%;
+      position: relative;
+      z-index: 5;
+    }
+  }
+
+  /* Modified header spacing for PWA mode */
+  @media (display-mode: standalone) {
+    header {
+      padding-top: 0 !important;
     }
   }
 `}</style>

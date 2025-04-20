@@ -303,6 +303,15 @@ code {
     padding-top: 0 !important;
   }
 
+  /* Add dedicated space for status bar */
+  .pwa-status-bar-spacer {
+    display: block;
+    height: env(safe-area-inset-top, 20px);
+    width: 100%;
+    position: relative;
+    z-index: 5;
+  }
+
   /* Adjust header for notched devices */
   header {
     padding-top: 0 !important;
