@@ -1,0 +1,50 @@
+{
+  "short_name": "PassGen",
+  "name": "Secure Password Generator",
+  "description": "Create strong, secure passwords with advanced security analysis",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "maskable_icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#4f46e5",
+  "background_color": "#0f172a",
+  "categories": ["utilities", "security", "tools"],
+  "orientation": "portrait",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Generate Password",
+      "short_name": "Generate",
+      "description": "Generate a new secure password",
+      "url": "/?action=generate"
+    },
+    {
+      "name": "Check Password",
+      "short_name": "Check",
+      "description": "Check the security of a password",
+      "url": "/?action=check"
+    }
+  ]
+}

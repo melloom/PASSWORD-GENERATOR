@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="%PUBLIC_URL%/Password-gen-favicon.png" />
+    <!-- Updated viewport settings for better PWA experience -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no, user-scalable=no, maximum-scale=1" />
+
+    <!-- Balanced Content Security Policy that works with React -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: blob:;
+      connect-src 'self' https://api.pwnedpasswords.com;
+      font-src 'self';
+      object-src 'none';
+      worker-src 'self' blob:;
+      base-uri 'self';
+      form-action 'self';
+    ">
+
+    <!-- Prevent XSS attacks -->
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+
+    <!-- Prevent MIME type sniffing -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
+    <!-- Prevent clickjacking -->
+    <meta http-equiv="X-Frame-Options" content="DENY">
+
+    <!-- Referrer Policy -->
+    <meta name="referrer" content="no-referrer">
+
+    <!-- Theme colors for different contexts -->
+    <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1e3a8a" media="(prefers-color-scheme: dark)" />
+    <meta name="msapplication-navbutton-color" content="#3b82f6" />
+
+    <!-- CSS fallback for browsers that don't support theme-color -->
+    <style>
+      /* This provides similar theming for Firefox and other browsers */
+      body {
+        border-top: 3px solid #3b82f6;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          border-top-color: #1e3a8a;
+        }
+      }
+
+      @media (display-mode: standalone) {
+        body {
+          padding-top: 0 !important;
+          margin-top: 0 !important;
+        }
+
+        /* Force header to have proper dimensions */
+        #root header {
+          min-height: 50px !important;
+          height: auto !important;
+          padding-top: 0 !important;
+        }
+
+        /* Ensure buttons are large enough to tap */
+        #root header button {
+          min-height: 40px !important;
+          min-width: 40px !important;
+          padding: 8px !important;
+        }
+
+        /* Make title larger */
+        #root header h1 {
+          font-size: 1.35rem !important;
+          line-height: 1.1 !important;
+        }
+
+        /* Properly handle notched devices */
+        @supports (padding-top: env(safe-area-inset-top)) {
+          #root header:before {
+            content: '';
+            height: env(safe-area-inset-top);
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: -1;
+          }
+        }
+      }
+    </style>
+
+    <!-- Critical iOS PWA meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Password Gen" />
+
+    <!-- Apple touch icons -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/Password-gen-favicon.png" />
+    <!-- iOS splash screens -->
+    <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/Password-gen-favicon.png" />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.webmanifest" crossorigin="use-credentials" />
+
+    <!-- SEO tags -->
+    <meta name="description" content="A secure password generator application - create strong, customizable passwords quickly" />
+    <meta name="keywords" content="password generator, secure password, password security, random password" />
+    <meta property="og:title" content="Password Generator" />
+    <meta property="og:description" content="Create secure, customizable passwords with this free tool" />
+    <meta property="og:type" content="website" />
+
+    <title>Password Generator | Create Strong Secure Passwords</title>
+
+    <!-- External CSS file -->
+    <link rel="stylesheet" href="%PUBLIC_URL%/styles.css" />
+
+    <!-- Enhanced iOS installation banner script with browser detection -->
+    <script>
+      // Cross-browser install prompt detection
+      function detectBrowser() {
+        const userAgent = navigator.userAgent;
+
+        // iOS detection
+        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+          return {
+            type: 'iOS',
+            isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent),
+            isChrome: /CriOS/.test(userAgent),
+            standalone: window.navigator.standalone === true
+          };
+        }
+
+        // Android detection
+        if (/Android/.test(userAgent)) {
+          return {
+            type: 'Android',
+            isChrome: /Chrome/.test(userAgent) && !/Edg/.test(userAgent),
+            isSamsung: /SamsungBrowser/.test(userAgent),
+            isFirefox: /Firefox/.test(userAgent)
+          };
+        }
+
+        // Desktop detection
+        if (/Windows|Macintosh|Linux/.test(userAgent)) {
+          return {
+            type: 'Desktop',
+            isChrome: /Chrome/.test(userAgent) && !/Edg/.test(userAgent),
+            isFirefox: /Firefox/.test(userAgent),
+            isEdge: /Edg/.test(userAgent),
+            isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent)
+          };
+        }
+
+        return { type: 'Unknown' };
+      }
+
+      // Show appropriate install banner based on browser detection
+      document.addEventListener('DOMContentLoaded', function() {
+        const browser = detectBrowser();
+        console.log("Browser detected:", browser);
+
+        // Remove diagnostic element after 2 seconds instead of 5
+        setTimeout(function() {
+          const diagnostic = document.getElementById('diagnostic');
+          if (diagnostic) diagnostic.style.display = 'none';
+        }, 2000);
+
+        // For iOS Safari, show iOS-specific instructions
+        if (browser.type === 'iOS' && browser.isSafari && !browser.standalone && !localStorage.getItem('pwa-instruction-shown')) {
+          setTimeout(function() {
+            const banner = document.createElement('div');
+            banner.style.position = 'fixed';
+            banner.style.bottom = '0';
+            banner.style.left = '0';
+            banner.style.right = '0';
+            banner.style.padding = '12px 15px';
+            banner.style.background = 'rgba(0,0,0,0.85)';
+            banner.style.color = '#fff';
+            banner.style.fontSize = '14px';
+            banner.style.zIndex = '99999';
+            banner.style.display = 'flex';
+            banner.style.alignItems = 'center';
+            banner.style.justifyContent = 'space-between';
+            banner.style.boxShadow = '0 -2px 10px rgba(0,0,0,0.3)';
+
+            banner.innerHTML = `
+              <div>
+                <p style="margin: 0 0 6px 0; font-weight: 600;">Install this app</p>
+                <p style="margin: 0;">Tap <span style="font-size: 16px">⎙</span> then "Add to Home Screen"</p>
+              </div>
+              <button style="background: #3b82f6; border: none; color: white; padding: 8px 12px; border-radius: 6px; margin-left: 10px; font-weight: 600; font-size: 13px;">Later</button>
+            `;
+
+            document.body.appendChild(banner);
+
+            banner.querySelector('button').addEventListener('click', function() {
+              banner.style.display = 'none';
+              localStorage.setItem('pwa-instruction-shown', 'true');
+            });
+          }, 2000);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!-- Fallback content in case React doesn't render -->
+    <div id="fallback">
+      <h1>Password Generator</h1>
+      <p>If you're seeing this message, the application is having trouble loading.</p>
+      <p>Please try refreshing the page or disabling any content blockers.</p>
+    </div>
+        <script>
+          // Show fallback content if React doesn't render within 3 seconds
+          setTimeout(function() {
+            if (document.getElementById('root').children.length === 0) {
+              document.getElementById('fallback').style.display = 'block';
+            }
+          }, 3000);
+        </script>
+        <!-- Hide fallback content by default -->
+        <style>
+          #fallback {
+            display: none;
+          }
+        </style>
+      </body>
+    </html>

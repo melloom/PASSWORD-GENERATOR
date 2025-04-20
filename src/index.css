@@ -1,0 +1,375 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom animations with performance optimizations */
+@keyframes fadeIn {
+  from { opacity: 0; will-change: opacity; }
+  to { opacity: 1; will-change: opacity; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; will-change: opacity; }
+  to { opacity: 0; will-change: opacity; }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px) translateZ(0);
+    will-change: transform, opacity;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+    will-change: transform, opacity;
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1) translateZ(0); will-change: transform; }
+  50% { transform: scale(1.05) translateZ(0); will-change: transform; }
+  100% { transform: scale(1) translateZ(0); will-change: transform; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg) translateZ(0); will-change: transform; }
+  to { transform: rotate(360deg) translateZ(0); will-change: transform; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) translateZ(0);
+    will-change: transform, opacity;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+    will-change: transform, opacity;
+  }
+}
+
+/* Animation classes */
+.animate-pulse {
+  animation: pulse 2s infinite;
+  will-change: transform;
+}
+
+.rotate-on-click {
+  animation: spin 0.5s linear;
+  will-change: transform;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out forwards;
+  will-change: opacity;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.3s ease-in-out forwards;
+  will-change: opacity;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* Better z-index management */
+.z-100 {
+  z-index: 100;
+}
+
+/* Ensure modals appear on top */
+.modal-overlay {
+  z-index: 100;
+  position: fixed;
+  inset: 0;
+}
+
+/* Form elements */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #6366f1, #ec4899);
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+/* Checkbox styles */
+input[type="checkbox"] {
+  cursor: pointer;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  border: 2px solid #6366f1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #6366f1;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Password field */
+.password-input {
+  font-family: 'Fira Code', 'Roboto Mono', monospace;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+}
+
+/* Copy button success animation */
+.copy-success {
+  animation: pulse 0.5s ease-in-out;
+}
+
+/* Notification badge */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #ec4899;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(115, 115, 115, 0.5);
+  border-radius: 4px;
+}
+
+/* Cross-browser scrollbar styling */
+* {
+  /* Standard scrollbars will be styled by the webkit selectors below */
+}
+
+/* Firefox scrollbar styling - only applied in Firefox */
+@supports selector(::-moz-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(115, 115, 115, 0.5) transparent;
+  }
+}
+
+*::-moz-scrollbar-thumb:hover {
+  background: rgba(115, 115, 115, 0.8);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Button ripple effects */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple:after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: scale(2);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Dark mode overrides */
+.dark {
+  input[type="range"] {
+    background: linear-gradient(90deg, #4f46e5, #be185d);
+  }
+
+  input[type="checkbox"] {
+    border-color: #4f46e5;
+  }
+
+  input[type="checkbox"]:checked {
+    background-color: #4f46e5;
+  }
+
+  /* Enhanced mobile responsiveness */
+  /* Ensure form controls are large enough to tap */
+  input[type="checkbox"],
+  input[type="range"]::-webkit-slider-thumb,
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Improve button visibility */
+  input[type="range"]::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Adjust padding for devices with notches or safe areas */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+
+body {
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  margin: 0;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* PWA-specific enhancements for header */
+@media (display-mode: standalone) {
+  /* Remove unnecessary padding in PWA mode */
+  body {
+    padding-top: 0 !important;
+  }
+
+  /* Adjust header for notched devices */
+  header {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    min-height: 50px !important;
+    height: auto !important;
+  }
+
+  /* Header buttons need to be larger for touch */
+  header button {
+    min-height: 40px !important;
+    min-width: 40px !important;
+    padding: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Ensure icons are properly sized */
+  header button svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  /* Make header title more visible */
+  header h1 {
+    font-size: 1.35rem !important;
+    font-weight: bold !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Fix spacing around header elements */
+  header .flex.items-center {
+    min-height: 0 !important;
+    height: 50px !important;
+  }
+
+  /* Proper spacing between header buttons */
+  header .space-x-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-left: 0.5rem !important;
+  }
+
+  /* Keep touch targets large enough */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Aggressive overrides for PWA mode - ensure these take priority */
+@media (display-mode: standalone) {
+  /* Force the header to have no padding top */
+  header.pt-safe {
+    padding-top: 0 !important;
+  }
+
+  /* Proper handling for notched devices */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    header.pt-safe:before {
+      content: '';
+      height: env(safe-area-inset-top, 0);
+      display: block;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+  }
+}

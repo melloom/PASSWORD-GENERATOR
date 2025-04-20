@@ -1,0 +1,60 @@
+{
+  "name": "password-generator",
+  "version": "1.0.0",
+  "description": "A simple password generator that allows users to create secure passwords with customizable options.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "keywords": [
+    "password",
+    "generator",
+    "security",
+    "react"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "detect-port-alt": "^1.1.6",
+    "gh-pages": "^6.3.0",
+    "html2pdf.js": "^0.10.1",
+    "lucide-react": "^0.321.0",
+    "qrcode.react": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "^5.0.1",
+    "web-vitals": "^4.2.4"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.0"
+  },
+  "homepage": "/",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/melloom/password-generator.git"
+  },
+  "overrides": {
+    "nth-check": "2.0.1",
+    "loader-utils": "2.0.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
