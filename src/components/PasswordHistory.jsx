@@ -97,26 +97,4 @@ const PasswordHistory = ({ history, darkMode, onClear, onUse }) => {
               </div>
               <div className="flex items-center mt-1.5 justify-between">
                 <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  <span className="flex items-center">
-                    {item.type === 'checked' ? (
-                      <Lock size={12} className={`mr-1 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-                    ) : (
-                      <Eye size={12} className="mr-1" />
-                    )}
-                    {item.type === 'checked' ? 'Checked' : item.type === 'memorable' ? 'Memorable' : 'Random'} · {item.length} chars
-                  </span>
-                </div>
-                <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  <Clock size={12} className="inline mr-1" />
-                  {item.timestamp}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default PasswordHistory;
+                  <span className="

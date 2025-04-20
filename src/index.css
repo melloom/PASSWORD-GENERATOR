@@ -359,6 +359,37 @@ code {
     min-height: 48px;
     min-width: 48px;
   }
+
+  /* Reset padding to avoid conflicts */
+  body {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* Ensure status bar spacer is visible and has proper height */
+  .pwa-status-bar-spacer {
+    display: block !important;
+    height: env(safe-area-inset-top, 44px) !important;
+    min-height: 44px !important;
+    width: 100% !important;
+    position: relative;
+    z-index: 50 !important;
+  }
+
+  /* Explicit background colors for light/dark mode */
+  body.dark-mode .pwa-status-bar-spacer {
+    background-color: #0f172a !important; /* Dark mode background */
+  }
+
+  body:not(.dark-mode) .pwa-status-bar-spacer {
+    background-color: #e0e7ff !important; /* Light mode background */
+  }
+
+  /* Fix header positioning */
+  header {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
 }
 
 /* Aggressive overrides for PWA mode - ensure these take priority */

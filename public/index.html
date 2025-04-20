@@ -49,7 +49,7 @@
         }
       }
 
-      /* PWA mode specific styling */
+      /* PWA mode specific styling - IMPROVED */
       @media (display-mode: standalone) {
         body {
           padding-top: 0 !important;
@@ -57,12 +57,23 @@
           border-top: none !important;
         }
 
-        /* Add status bar spacer */
+        /* Enhanced status bar spacer with fallback height */
         .pwa-status-bar-spacer {
           display: block !important;
-          height: env(safe-area-inset-top, 20px) !important;
+          height: env(safe-area-inset-top, 44px) !important;
+          min-height: 44px !important;
           width: 100% !important;
-          background-color: rgba(15, 23, 42, 0.95); /* Dark blue that works in both themes */
+          position: relative;
+          z-index: 9000 !important;
+          background-color: #0f172a;
+          color: transparent;
+        }
+
+        /* Light mode status bar */
+        @media (prefers-color-scheme: light) {
+          .pwa-status-bar-spacer {
+            background-color: #e0e7ff;
+          }
         }
 
         /* Adjust header for status bar */

@@ -913,13 +913,13 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
         ? 'bg-gradient-to-br from-dark-900 to-dark-800 text-white'
         : 'bg-gradient-to-br from-blue-50 via-slate-50 to-purple-50 text-slate-900 app-light-mode'
     }`}>
-      {/* Add ref to the top section for scrolling */}
-      <div ref={topRef}></div>
+      {/* Always visible top anchor for scrolling */}
+      <div ref={topRef} className="absolute top-0"></div>
 
-      {/* PWA Status Bar Spacer - NEW */}
-      <div className="pwa-status-bar-spacer"></div>
+      {/* Dedicated PWA Status Bar Spacer - FIXED */}
+      <div className={`pwa-status-bar-spacer ${darkMode ? 'bg-dark-900' : 'bg-blue-50'}`}></div>
 
-      {/* Enhanced Security Banner */}
+      {/* Enhanced Security Banner - NOW BELOW THE SPACER */}
       <div className={`${darkMode ? 'bg-green-900/30 border-green-800/30' : 'bg-green-50 border-green-200'} border-b px-4 py-3 text-sm flex items-center justify-between ${showSecurityInfo ? '' : 'cursor-pointer hover:bg-green-800/20'}`}
         onClick={() => !showSecurityInfo && setShowSecurityInfo(true)}>
         <div className="flex items-center">
@@ -937,56 +937,6 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
           {showSecurityInfo ? <X size={14} /> : <Info size={14} />}
         </button>
       </div>
-
-      {/* Extended Security Information - enhanced version */}
-      {showSecurityInfo && (
-        <div className={`${darkMode ? 'bg-dark-800/70 border-dark-700' : 'bg-white border-gray-200'} border-b px-6 py-4 animate-fadeIn`}>
-          <div className="max-w-4xl mx-auto space-y-3">
-            <h3 className={`text-lg font-medium flex items-center ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-              <ShieldCheck size={18} className={`mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-              Advanced Security & Privacy Features
-            </h3>
-
-            <div className="space-y-2 text-sm">
-              <div className={`flex items-start ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <Shield size={16} className={`mt-0.5 mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-                <p><strong>CSPRNG Technology:</strong> All passwords are generated using Cryptographically Secure Pseudo-Random Number Generation via the Web Crypto API.</p>
-              </div>
-
-              <div className={`flex items-start ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <Shield size={16} className={`mt-0.5 mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-                <p><strong>Enhanced Entropy Collection:</strong> Additional randomness is gathered from your mouse movements, keyboard typing, and other interactions.</p>
-              </div>
-
-              <div className={`flex items-start ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <Shield size={16} className={`mt-0.5 mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-                <p><strong>Zero-knowledge design:</strong> All passwords are generated directly in your browser. Nothing is sent to any server.</p>
-              </div>
-
-              <div className={`flex items-start ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <Shield size={16} className={`mt-0.5 mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-                <p><strong>Memory protection:</strong> Passwords are automatically cleared from memory when you navigate away, close the tab, or clear history.</p>
-              </div>
-
-              <div className={`flex items-start ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <Shield size={16} className={`mt-0.5 mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-                <p><strong>Military-grade data shredding:</strong> When passwords are deleted from history, the data is overwritten with multiple patterns before removal, making recovery impossible.</p>
-              </div>
-
-              <div className={`flex items-start ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <Shield size={16} className={`mt-0.5 mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-                <p><strong>Anti-pattern protection:</strong> Passwords are generated with Fisher-Yates secure shuffling to prevent predictable patterns.</p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowSecurityInfo(false)}
-              className={`mt-2 px-4 py-2 rounded-md text-sm ${darkMode ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-100 hover:bg-gray-200'}`}>
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Ultra-compact header optimized for PWA mode */}
 <header className={`py-0.5 pt-safe ${darkMode ? 'bg-dark-800/80 border-dark-700' : 'bg-white border-slate-200 shadow-sm'} border-b backdrop-blur-md sticky top-0 z-10 transition-all duration-300 flex items-center`}>
@@ -2605,6 +2555,44 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
     }
   }
 `}</style>
+
+      {/* IMPROVED CSS for PWA status bar with theme-matching and enforced display */}
+      <style jsx global>{`
+        /* PWA status bar spacer - Only visible in PWA mode */
+        .pwa-status-bar-spacer {
+          display: none;
+          height: 0;
+          width: 100%;
+          position: relative;
+          z-index: 20;
+        }
+
+        /* Critical: Force spacer to be visible in PWA mode with proper height */
+        @media (display-mode: standalone) {
+          .pwa-status-bar-spacer {
+            display: block !important;
+            height: env(safe-area-inset-top, 44px) !important; /* Default to 44px if env() not supported */
+            min-height: 44px !important; /* Minimum height for iPhone notch */
+          }
+
+          /* Avoid double status bars on iOS */
+          body {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+          }
+
+          /* Fix header for PWA mode - no padding needed */
+          header.pt-safe {
+            padding-top: 0 !important;
+          }
+
+          /* Ensure all content comes after status bar */
+          #root > div > *:not(.pwa-status-bar-spacer) {
+            position: relative;
+            z-index: 10;
+          }
+        }
+      `}</style>
 </div>
   );
 };
