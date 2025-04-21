@@ -1,67 +1,132 @@
-import React, { useState } from 'react';
-import { analyzePasswordSecurity } from '../utils/passwordUtils';
-import SecurityCheck from './SecurityCheck';
+import React from 'react';
+import { Shield, AlertTriangle, Check, Info, Clock, Eye } from 'lucide-react';
 
-const PasswordChecker = ({ darkMode }) => {
-  const [passwordToCheck, setPasswordToCheck] = useState('');
-  const [analysisResult, setAnalysisResult] = useState(null);
+const PasswordChecker = ({ password, analysis, darkMode }) => {
+  if (!password || !analysis) {
+    return (
+      <div className={`p-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        Enter a password to check its strength
+      </div>
+    );
+  }
 
-  const checkPassword = () => {
-    if (!passwordToCheck.trim()) return;
-    const result = analyzePasswordSecurity(passwordToCheck);
-    setAnalysisResult(result);
-  };
+  const { score, entropy, timeToBreak, suggestions } = analysis;
+
+  // Define strength labels and colors
+  const strengthLabels = ['Very Weak', 'Weak', 'Medium', 'Strong', 'Very Strong'];
+  const strengthColors = [
+    darkMode ? 'text-red-400 bg-red-900/30' : 'text-red-600 bg-red-100',
+    darkMode ? 'text-orange-400 bg-orange-900/30' : 'text-orange-600 bg-orange-100',
+    darkMode ? 'text-yellow-400 bg-yellow-900/30' : 'text-yellow-600 bg-yellow-100',
+    darkMode ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-100',
+    darkMode ? 'text-green-400 bg-green-900/30' : 'text-green-600 bg-green-100'
+  ];
 
   return (
-    <div className={`rounded-xl shadow-md overflow-hidden ${darkMode ? 'bg-dark-800 border border-dark-700' : 'bg-white border border-gray-200'}`}>
-      {/* Header */}
-      <div className={`p-4 border-b ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
-        <h3 className="font-medium text-lg flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          Check Your Password
-        </h3>
-      </div>
-
-      {/* Content */}
-      <div className="p-6">
-        <div className="flex flex-col space-y-4">
-          {/* Input field */}
-          <input
-            type="text"
-            value={passwordToCheck}
-            onChange={(e) => setPasswordToCheck(e.target.value)}
-            placeholder="Enter a password to check its strength"
-            className={`p-4 border rounded-lg ${
-              darkMode
-                ? 'bg-dark-700 text-white border-dark-600 focus:border-primary-500'
-                : 'bg-gray-50 text-gray-800 border-gray-300 focus:border-primary-400'
-            } w-full focus:outline-none focus:ring-2 focus:ring-primary-500/20`}
-          />
-
-          {/* Check button - larger touch target for mobile */}
-          <button
-            onClick={checkPassword}
-            className={`w-full mb-4 px-4 py-4 touch-target ${
-              darkMode
-                ? 'bg-primary-600 hover:bg-primary-700'
-                : 'bg-primary-500 hover:bg-primary-600'
-            } text-white rounded-lg font-medium transition transform hover:scale-[1.01] active:scale-[0.99]`}
-          >
-            Check Password
-          </button>
-
-          {/* Results section */}
-          {analysisResult && (
-            <div className={`mt-4 p-4 rounded-lg animate-fadeIn ${
-              darkMode ? 'bg-dark-700 border border-dark-600' : 'bg-gray-50 border border-gray-200'
+    <div>
+      {/* Strength summary */}
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'} mb-1`}>
+            Password Strength
+          </h3>
+          <div className="flex items-center">
+            <Shield size={16} className={`mr-2 ${
+              score >= 3 ? (darkMode ? 'text-green-400' : 'text-green-600') :
+              score >= 2 ? (darkMode ? 'text-yellow-400' : 'text-yellow-600') :
+                          (darkMode ? 'text-red-400' : 'text-red-600')
+            }`} />
+            <span className={`text-sm font-medium ${
+              score >= 3 ? (darkMode ? 'text-green-400' : 'text-green-600') :
+              score >= 2 ? (darkMode ? 'text-yellow-400' : 'text-yellow-600') :
+                          (darkMode ? 'text-red-400' : 'text-red-600')
             }`}>
-              <SecurityCheck analysis={analysisResult} darkMode={darkMode} />
-            </div>
-          )}
+              {strengthLabels[score]}
+            </span>
+          </div>
+        </div>
+        <div className={`px-3 py-2 rounded-lg ${strengthColors[score]}`}>
+          <span className="text-lg font-bold">{entropy.toFixed(1)}</span>
+          <span className="text-sm ml-1">bits</span>
         </div>
       </div>
+
+      {/* Progress bar */}
+      <div className={`h-2 w-full ${darkMode ? 'bg-dark-700' : 'bg-gray-200'} rounded-full overflow-hidden mb-4`}>
+        <div
+          className={`h-full ${
+            score === 0 ? 'bg-red-500' :
+            score === 1 ? 'bg-orange-500' :
+            score === 2 ? 'bg-yellow-500' :
+            score === 3 ? 'bg-blue-500' :
+                          'bg-green-500'
+          }`}
+          style={{ width: `${Math.min(100, (score + 1) * 20)}%` }}
+        ></div>
+      </div>
+
+      {/* Details */}
+      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+        {/* Time to crack */}
+        <div className={`p-3 rounded-lg border ${darkMode ? 'bg-dark-700/50 border-dark-600' : 'bg-gray-50 border-gray-200'}`}>
+          <div className="flex items-start">
+            <Clock size={16} className="mt-0.5 mr-2 flex-shrink-0" />
+            <div>
+              <div className="font-medium mb-1">Time to crack</div>
+              <div className={`font-bold ${
+                timeToBreak.includes('centur') || timeToBreak.includes('year') ?
+                (darkMode ? 'text-green-400' : 'text-green-600') :
+                timeToBreak.includes('month') || timeToBreak.includes('week') ?
+                (darkMode ? 'text-blue-400' : 'text-blue-600') :
+                timeToBreak.includes('day') ?
+                (darkMode ? 'text-yellow-400' : 'text-yellow-600') :
+                (darkMode ? 'text-red-400' : 'text-red-600')
+              }`}>
+                {timeToBreak}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Entropy */}
+        <div className={`p-3 rounded-lg border ${darkMode ? 'bg-dark-700/50 border-dark-600' : 'bg-gray-50 border-gray-200'}`}>
+          <div className="flex items-start">
+            <Shield size={16} className="mt-0.5 mr-2 flex-shrink-0" />
+            <div>
+              <div className="font-medium mb-1">Entropy</div>
+              <div>
+                <span className="font-bold">{entropy.toFixed(1)} bits</span>
+                <span className="ml-2 opacity-75">
+                  ({entropy < 40 ? 'Low' : entropy < 60 ? 'Medium' : entropy < 80 ? 'High' : 'Very High'})
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Suggestions */}
+      {suggestions && suggestions.length > 0 && (
+        <div className={`mt-4 p-3 rounded-lg border ${darkMode ? 'bg-dark-700/50 border-dark-600' : 'bg-gray-50 border-gray-200'}`}>
+          <h4 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Suggestions</h4>
+          <ul className="space-y-2">
+            {suggestions.map((suggestion, index) => (
+              <li key={index} className="flex items-start">
+                <div className="mt-0.5 mr-2">
+                  {suggestion.type === 'warning' ? (
+                    <AlertTriangle size={14} className={darkMode ? 'text-yellow-400' : 'text-yellow-600'} />
+                  ) : suggestion.type === 'success' ? (
+                    <Check size={14} className={darkMode ? 'text-green-400' : 'text-green-600'} />
+                  ) : (
+                    <Info size={14} className={darkMode ? 'text-blue-400' : 'text-blue-500'} />
+                  )}
+                </div>
+                <span className="text-sm">{suggestion.message}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

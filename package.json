@@ -21,13 +21,15 @@
   "license": "MIT",
   "dependencies": {
     "detect-port-alt": "^1.1.6",
+    "focus-trap-react": "^11.0.3",
     "gh-pages": "^6.3.0",
     "html2pdf.js": "^0.10.1",
     "lucide-react": "^0.321.0",
     "qrcode.react": "^3.2.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.5.1",
+    "react-scripts": "^5.0.0",
     "web-vitals": "^4.2.4"
   },
   "devDependencies": {

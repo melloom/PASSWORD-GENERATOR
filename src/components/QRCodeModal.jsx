@@ -1,145 +1,277 @@
-import React, { useState } from 'react';
-import { X, Download, Share2, QrCode, Info } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
+import { X, QrCode, ArrowLeft, Copy, Check, Download } from 'lucide-react';
 import QRCode from 'qrcode.react';
 
-const QRCodeModal = ({ isOpen, onClose, password, darkMode }) => {
-  const [qrSize, setQrSize] = useState(200);
+const QRCodeModal = ({ isOpen, onClose, password, darkMode, previousModal, onBackToShare }) => {
+  const [qrSize, setQrSize] = useState(240);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const modalRef = useRef(null);
+  const qrCanvasRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 380) setQrSize(180);
+      else if (width < 640) setQrSize(220);
+      else setQrSize(260);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  // Robust copy handler for all browsers, always fallback on iOS
+  const handleCopy = () => {
+    setCopyError(false);
+    setIsCopying(true);
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (navigator.clipboard && window.isSecureContext && !isiOS) {
+      navigator.clipboard.writeText(password)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => {
+            setCopied(false);
+            setIsCopying(false);
+          }, 1200);
+        })
+        .catch(() => {
+          fallbackCopy();
+        });
+    } else {
+      fallbackCopy();
+    }
+  };
+
+  // Fallback copy using textarea
+  const fallbackCopy = () => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = password;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = 0;
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if (success) {
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+          setIsCopying(false);
+        }, 1200);
+      } else {
+        setCopyError(true);
+        setIsCopying(false);
+      }
+    } catch {
+      setCopyError(true);
+      setIsCopying(false);
+    }
+  };
+
+  // Robust QR code download handler for all browsers
+  const handleDownload = () => {
+    setDownloadError(false);
+    try {
+      // Try to get the canvas from the QRCode component
+      const canvas = qrCanvasRef.current?.querySelector('canvas');
+      if (!canvas) throw new Error('No canvas found');
+      const scale = 2;
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = qrSize * scale;
+      tempCanvas.height = qrSize * scale;
+      const ctx = tempCanvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.drawImage(canvas, 0, 0);
+      const pngUrl = tempCanvas.toDataURL('image/png');
+      // Try to trigger download
+      const link = document.createElement('a');
+      link.href = pngUrl;
+      link.download = 'password-qrcode.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      setDownloadError(true);
+    }
+  };
 
   if (!isOpen) return null;
 
-  // Function to download QR code as PNG
-  const downloadQRCode = () => {
-    const canvas = document.getElementById('qr-code-canvas');
-    if (canvas) {
-      const pngUrl = canvas
-        .toDataURL('image/png')
-        .replace('image/png', 'image/octet-stream');
-
-      const downloadLink = document.createElement('a');
-      downloadLink.href = pngUrl;
-      downloadLink.download = 'password-qrcode.png';
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
     }
   };
 
-  // Function to share QR code if Web Share API is available
-  const shareQRCode = () => {
-    const canvas = document.getElementById('qr-code-canvas');
-    if (canvas && navigator.share) {
-      canvas.toBlob(async (blob) => {
-        try {
-          const file = new File([blob], 'password-qrcode.png', { type: 'image/png' });
-          await navigator.share({
-            title: 'Password QR Code',
-            text: 'Scan this QR code to view the password',
-            files: [file]
-          });
-        } catch (error) {
-          console.error('Error sharing:', error);
-          // Fallback to download if sharing fails
-          downloadQRCode();
-        }
-      });
-    } else {
-      // Fallback to download if sharing is not available
-      downloadQRCode();
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-      <div className={`w-full max-w-md rounded-xl shadow-2xl ${darkMode ? 'bg-dark-800 border border-dark-700' : 'bg-white border border-gray-300'} max-h-[90vh] flex flex-col animate-slideIn`}>
-        <div className={`p-4 border-b ${darkMode ? 'border-dark-700' : 'border-gray-200'} flex justify-between items-center`}>
-          <h3 className="font-medium text-lg flex items-center">
-            <QrCode size={18} className={`mr-2 ${darkMode ? 'text-primary-400' : 'text-primary-500'}`} />
-            Password QR Code
-          </h3>
-          <button
-            onClick={onClose}
-            className={`p-1.5 rounded-full ${darkMode ? 'hover:bg-dark-600 bg-dark-700' : 'hover:bg-gray-200 bg-gray-100'} transition-colors`}
+  return ReactDOM.createPortal(
+    <div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
+      onClick={handleBackdropClick}
+      aria-modal="true"
+      role="dialog"
+      tabIndex={-1}
+    >
+      <div
+        ref={modalRef}
+        className={`w-full max-w-md rounded-2xl ${darkMode ? 'bg-dark-900 border border-dark-700' : 'bg-white border border-gray-100'} shadow-2xl animate-fadeIn outline-none`}
+        onClick={e => e.stopPropagation()}
+        tabIndex={0}
+        style={{
+          maxHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          margin: '0 8px',
+          position: 'relative'
+        }}
+      >
+        {/* Absolute X button - always visible, top right */}
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 transition"
+          aria-label="Close"
+          style={{
+            color: '#222',
+            zIndex: 1002,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+            border: '1px solid #eee'
+          }}
+        >
+          <X size={24} />
+        </button>
+        {/* Modal header: centered title and icon, always visible */}
+        <div
+          className={`flex items-center justify-center px-6 py-4 border-b sticky top-0 z-10 ${
+            darkMode ? 'border-dark-700 bg-dark-900' : 'border-gray-100 bg-white'
+          }`}
+          style={{
+            minHeight: 56,
+            fontSize: 22,
+            fontWeight: 700,
+            letterSpacing: 0.2,
+          }}
+        >
+          <QrCode size={28} className={`mr-3 ${darkMode ? 'text-white' : 'text-gray-900'}`} />
+          <span
+            className={`font-bold text-xl sm:text-2xl ${
+              darkMode ? 'text-white' : 'text-gray-900'
+            }`}
+            style={{ lineHeight: 1.2 }}
           >
-            <X size={18} />
-          </button>
+            QR Code
+          </span>
         </div>
-
-        <div className="p-6 overflow-y-auto flex flex-col items-center">
-          <div className={`p-3 mb-4 rounded-lg border ${darkMode ? 'border-dark-600 bg-dark-700/50' : 'border-gray-300 bg-gray-50'}`}>
-            <div className="flex justify-center items-center">
-              <div className={`p-4 rounded-lg ${darkMode ? 'bg-white' : 'bg-white'}`}>
-                <QRCode
-                  id="qr-code-canvas"
-                  value={password}
-                  size={qrSize}
-                  level="H"
-                  includeMargin={true}
-                  renderAs="canvas"
-                />
-              </div>
-            </div>
+        {/* QR Code container */}
+        <div className="flex flex-col items-center justify-center px-6 py-6">
+          <div className="mb-3 text-center text-base font-medium text-gray-500 dark:text-gray-400">
+            Scan this QR code to get the password
           </div>
-
-          <div className="w-full mb-4">
-            <label className={`block text-sm mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              QR Code Size
-            </label>
-            <input
-              type="range"
-              min="150"
-              max="300"
-              value={qrSize}
-              onChange={(e) => setQrSize(parseInt(e.target.value))}
-              className="w-full h-2 bg-gradient-to-r from-primary-400 to-secondary-500 rounded-lg appearance-none cursor-pointer"
+          <div
+            ref={qrCanvasRef}
+            className={`flex items-center justify-center rounded-xl shadow-lg mx-auto mb-6`}
+            style={{
+              width: qrSize + 32,
+              height: qrSize + 32,
+              background: darkMode ? '#23272f' : '#fff',
+              border: darkMode ? '1.5px solid #333' : '1.5px solid #e5e7eb',
+              padding: 16,
+              boxSizing: 'content-box'
+            }}
+          >
+            <QRCode
+              id="qr-code"
+              value={password}
+              size={qrSize}
+              level="M"
+              bgColor={darkMode ? "#23272f" : "#fff"}
+              fgColor={darkMode ? "#fff" : "#23272f"}
+              includeMargin={false}
             />
-            <div className="flex justify-between text-xs mt-1">
-              <span>Smaller</span>
-              <span>Larger</span>
+          </div>
+          {/* Password text below QR */}
+          <div className="w-full">
+            <div className={`p-3 rounded-lg text-center font-mono text-base tracking-tight break-all whitespace-pre-wrap mb-4 border ${darkMode ? 'bg-dark-800 text-gray-200 border-dark-700' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
+              {password}
             </div>
-          </div>
-
-          <div className={`w-full p-3 rounded-lg flex items-start ${
-            darkMode ? 'bg-dark-700/60 border border-dark-600' : 'bg-blue-50 border border-blue-100'
-          } mb-4`}>
-            <Info size={16} className={`${darkMode ? 'text-primary-400' : 'text-primary-500'} mt-0.5 mr-2 flex-shrink-0`} />
-            <div className="text-xs">
-              <p><strong>How to use:</strong> Scan this QR code with your mobile device to quickly transfer the password without typing it.</p>
+            {/* Copy and download buttons */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={handleCopy}
+                  disabled={isCopying}
+                  className={`flex items-center justify-center px-4 py-2 rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-primary-400 ${
+                    darkMode
+                      ? 'bg-dark-700 hover:bg-dark-600 text-gray-100'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                  }`}
+                >
+                  {copied ? <Check size={16} className="mr-1.5" /> : <Copy size={16} className="mr-1.5" />}
+                  {copied ? 'Copied!' : isCopying ? 'Copying...' : 'Copy'}
+                </button>
+                <button
+                  onClick={handleDownload}
+                  className={`flex items-center justify-center px-4 py-2 rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-primary-400 ${
+                    darkMode
+                      ? 'bg-primary-600 hover:bg-primary-500 text-white'
+                      : 'bg-primary-500 hover:bg-primary-400 text-white'
+                  }`}
+                >
+                  <Download size={16} className="mr-1.5" />
+                  Download QR
+                </button>
+              </div>
+              {copyError && (
+                <div className="text-xs text-red-500 mt-1">Copy failed. Please copy manually.</div>
+              )}
+              {downloadError && (
+                <div className="text-xs text-red-500 mt-1">
+                  Download failed. Press and hold the QR code to save it manually.
+                </div>
+              )}
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 w-full">
-            <button
-              onClick={downloadQRCode}
-              className={`py-2 px-4 rounded-lg ${
-                darkMode
-                  ? 'bg-dark-700 hover:bg-dark-600 text-gray-300 border border-dark-600'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
-              } transition-all flex items-center justify-center`}
-            >
-              <Download size={16} className="mr-2" />
-              Download
-            </button>
-            <button
-              onClick={shareQRCode}
-              className={`py-2 px-4 rounded-lg ${
-                darkMode
-                  ? 'bg-primary-600 hover:bg-primary-500 text-white'
-                  : 'bg-primary-500 hover:bg-primary-400 text-white'
-              } transition-all flex items-center justify-center`}
-            >
-              <Share2 size={16} className="mr-2" />
-              Share
-            </button>
-          </div>
-        </div>
-
-        <div className={`p-4 border-t ${darkMode ? 'border-dark-700' : 'border-gray-200'}`}>
-          <div className="text-center text-xs text-gray-500">
-            For enhanced security, QR codes are generated locally and not stored on any server.
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

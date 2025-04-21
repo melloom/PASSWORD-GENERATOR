@@ -1,0 +1,4 @@
+bcrypt
+uvicorn
+fastapi  # or Flask, depending on your API
+cryptography

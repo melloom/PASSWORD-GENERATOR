@@ -5,6 +5,49 @@ import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
 
+// Error boundary component for catching render errors
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("App crashed:", error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="app-error-boundary">
+          <h1>Something went wrong</h1>
+          <p>The application encountered an error. Please try refreshing the page.</p>
+          {this.state.error && (
+            <div className="error-details">
+              <p><strong>Error:</strong> {this.state.error.toString()}</p>
+              {this.state.errorInfo && (
+                <details>
+                  <summary>Component Stack</summary>
+                  <pre>{this.state.errorInfo.componentStack}</pre>
+                </details>
+              )}
+            </div>
+          )}
+          <button onClick={() => window.location.reload()}>
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Ensure public URL is properly handled for production
 const rootElement = document.getElementById('root');
 
@@ -89,29 +132,66 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }
 });
 
-// Log to help debug startup issues
-console.log('React initialization starting...');
-
-// Create a root for concurrent React
-const root = ReactDOM.createRoot(document.getElementById('root'));
-
-// Wrap rendering in try-catch to identify errors
+// Safer initialization with more error logging
 try {
-  // Render the app with React 18 syntax
+  console.log("Starting React initialization...");
+
+  const rootElement = document.getElementById('root');
+
+  if (!rootElement) {
+    throw new Error("Root element not found in the DOM");
+  }
+
+  // For React 18+
+  const root = ReactDOM.createRoot(rootElement);
+
+  // Clear any previous fallback content
+  if (document.getElementById('fallback-content')) {
+    document.getElementById('fallback-content').style.display = 'none';
+  }
+
   root.render(
     <React.StrictMode>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </React.StrictMode>
   );
-  console.log('React render completed');
+
+  console.log("React rendered successfully");
+
+  // If we're using service worker, register it
+  if (typeof serviceWorkerRegistration?.register === 'function') {
+    serviceWorkerRegistration.register({
+      onUpdate: registration => {
+        // Prompt user to refresh for new version
+        if (registration && registration.waiting) {
+          if (window.confirm('New version available! Reload to update?')) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+          }
+        }
+      }
+    });
+  }
+
+  // Report web vitals
+  reportWebVitals(() => {});
+
 } catch (error) {
-  console.error('Failed to render React application:', error);
+  console.error("Failed to initialize React application:", error);
+
+  // Display fallback UI
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    rootElement.innerHTML = `
+      <div class="app-error-fallback">
+        <h1>Password Generator</h1>
+        <p>There was an error loading the application.</p>
+        <p><strong>Technical details:</strong> ${error.message}</p>
+        <button onclick="window.location.reload()">Try Again</button>
+        <p class="hint">Try clearing your browser cache or using a different browser.</p>
+      </div>
+    `;
+  }
 }
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://cra.link/PWA
-serviceWorkerRegistration.register();
-
-// Report web vitals
-reportWebVitals();

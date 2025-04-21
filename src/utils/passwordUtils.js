@@ -71,55 +71,15 @@ const getSecureRandomValues = (count) => {
  * @return {number} - A secure random integer
  */
 const secureRandomInt = (min, max) => {
-  // Fixed version that prevents infinite recursion
   const range = max - min + 1;
-
-  // For small ranges, simpler method without modulo bias concerns
-  if (range <= 256) {
-    const randomBytes = new Uint8Array(1);
-    window.crypto.getRandomValues(randomBytes);
-    // Use modulo for small ranges where bias is negligible
-    return min + (randomBytes[0] % range);
-  }
-
-  // For larger ranges, use a more sophisticated method but with recursion limit
-  const bitsNeeded = Math.ceil(Math.log2(range));
-  const bytesNeeded = Math.ceil(bitsNeeded / 8);
-  const maxValidValue = (1 << bitsNeeded) - 1; // 2^bitsNeeded - 1
-
-  // Limit recursion with a counter
-  let attempts = 0;
-  const MAX_ATTEMPTS = 100;
-
-  while (attempts < MAX_ATTEMPTS) {
-    attempts++;
-
-    // Get random values
-    const randomBytes = new Uint8Array(bytesNeeded);
-    window.crypto.getRandomValues(randomBytes);
-
-    // Convert to integer
-    let value = 0;
-    for (let i = 0; i < bytesNeeded; i++) {
-      value = (value << 8) | randomBytes[i];
-    }
-
-    // Mask extra bits
-    value = value & maxValidValue;
-
-    // If value is within our desired range, return it
-    if (value < range * Math.floor(maxValidValue / range) * range) {
-      return min + (value % range);
-    }
-
-    // Otherwise, try again (but with limited attempts)
-  }
-
-  // Fallback if we exceed MAX_ATTEMPTS to prevent infinite recursion
-  const randomBytes = new Uint8Array(4); // 32 bits should be enough
-  window.crypto.getRandomValues(randomBytes);
-  const fallbackValue = new Uint32Array(randomBytes.buffer)[0];
-  return min + (fallbackValue % range);
+  if (range <= 0) throw new Error("Invalid range for secureRandomInt");
+  const maxUint32 = 0xffffffff;
+  const maxAcceptable = maxUint32 - (maxUint32 % range);
+  let rand;
+  do {
+    rand = new Uint32Array(getRandomBytes(4).buffer)[0];
+  } while (rand > maxAcceptable);
+  return min + (rand % range);
 };
 
 /**
@@ -128,17 +88,32 @@ const secureRandomInt = (min, max) => {
  * @return {Array} - Shuffled array
  */
 const secureShuffleArray = (array) => {
-  const result = [...array];
-  for (let i = result.length - 1; i > 0; i--) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = secureRandomInt(0, i);
-    [result[i], result[j]] = [result[j], result[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return result;
+  return arr;
 };
 
-// Replace or enhance the generatePassword function
-const generatePassword = ({
-  length = 16,
+// Enhanced random bytes generation with multiple fallbacks
+const getRandomBytes = (length) => {
+  if (window.crypto && window.crypto.getRandomValues) {
+    const randomBuffer = new Uint8Array(length);
+    window.crypto.getRandomValues(randomBuffer);
+    // Mix in entropy pool for extra unpredictability
+    for (let i = 0; i < length; i++) {
+      randomBuffer[i] ^= entropyPool[(entropyOffset + i) % entropyPool.length];
+    }
+    entropyOffset = (entropyOffset + length) % entropyPool.length;
+    return randomBuffer;
+  }
+  throw new Error("Crypto API not available. Cannot generate secure passwords.");
+};
+
+// Fix the generatePassword function to ensure it never returns "00000000"
+export const generatePassword = ({
+  length = 12,
   includeUppercase = true,
   includeLowercase = true,
   includeNumbers = true,
@@ -146,30 +121,22 @@ const generatePassword = ({
   avoidAmbiguous = false,
   excludeSimilar = false,
   customExclusions = '',
-  pattern = null
+  avoidCommon = true
 }) => {
-  // Define character sets
   let uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
   let numberChars = '0123456789';
-  let symbolChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  let symbolChars = '!@#$%^&*()-_=+[]{}|;:,.<>?/~';
+  const ambiguousChars = 'Il1O0';
+  const similarChars = 'iIlLoO0';
 
-  // Handle ambiguous character exclusion
-  if (avoidAmbiguous) {
-    uppercaseChars = uppercaseChars.replace(/[IO]/g, '');
-    lowercaseChars = lowercaseChars.replace(/[l]/g, '');
-    numberChars = numberChars.replace(/[01]/g, '');
-  }
+  // Exclusions
+  const exclusions = new Set();
+  if (avoidAmbiguous) for (const c of ambiguousChars) exclusions.add(c);
+  if (excludeSimilar) for (const c of similarChars) exclusions.add(c);
+  if (customExclusions) for (const c of customExclusions) exclusions.add(c);
 
-  // Handle similar character exclusion
-  if (excludeSimilar) {
-    uppercaseChars = uppercaseChars.replace(/[IL1O0]/g, '');
-    lowercaseChars = lowercaseChars.replace(/[il1o0]/g, '');
-    numberChars = numberChars.replace(/[10]/g, '');
-  }
-
-  // Handle custom exclusions
-  const exclusions = new Set(customExclusions.split(''));
+  // Filter character sets
   if (exclusions.size > 0) {
     uppercaseChars = Array.from(uppercaseChars).filter(c => !exclusions.has(c)).join('');
     lowercaseChars = Array.from(lowercaseChars).filter(c => !exclusions.has(c)).join('');
@@ -177,61 +144,286 @@ const generatePassword = ({
     symbolChars = Array.from(symbolChars).filter(c => !exclusions.has(c)).join('');
   }
 
-  // Build character set
-  let charset = '';
-  if (includeUppercase) charset += uppercaseChars;
-  if (includeLowercase) charset += lowercaseChars;
-  if (includeNumbers) charset += numberChars;
-  if (includeSymbols) charset += symbolChars;
+  // Build pools
+  const pools = [];
+  if (includeLowercase && lowercaseChars) pools.push(lowercaseChars);
+  if (includeUppercase && uppercaseChars) pools.push(uppercaseChars);
+  if (includeNumbers && numberChars) pools.push(numberChars);
+  if (includeSymbols && symbolChars) pools.push(symbolChars);
 
-  // Ensure we have at least one character type
-  if (charset.length === 0) charset = lowercaseChars;
+  let charPool = pools.join('');
+  if (!charPool) {
+    charPool = 'abcdefghijklmnopqrstuvwxyz';
+    pools.length = 0;
+    pools.push(charPool);
+  }
 
-  // Generate password using secure random function
+  // Ensure password includes at least one char from each required type
   let password = '';
+  let attempts = 0;
+  const maxAttempts = 10;
+  do {
+    let chars = [];
+    // Guarantee at least one from each pool
+    for (const pool of pools) {
+      chars.push(pool[secureRandomInt(0, pool.length - 1)]);
+    }
+    // Fill the rest randomly
+    const remaining = length - chars.length;
+    const randomBytes = getRandomBytes(remaining);
+    for (let i = 0; i < remaining; i++) {
+      chars.push(charPool[randomBytes[i] % charPool.length]);
+    }
+    // Shuffle to avoid predictable placement
+    chars = secureShuffleArray(chars);
+    password = chars.join('');
+    attempts++;
+    // Avoid common passwords if requested
+    if (avoidCommon && commonPasswords.includes(password)) continue;
+    // Validate password
+    if (validatePassword(password)) break;
+  } while (attempts < maxAttempts);
 
-  // Ensure the password contains at least one character from each selected type
-  if (includeUppercase && uppercaseChars.length > 0) {
-    password += uppercaseChars.charAt(secureRandomInt(0, uppercaseChars.length - 1));
+  // Fallback if all else fails
+  if (!validatePassword(password)) {
+    password = 'Pw' + Date.now().toString(36) + '!';
   }
-  if (includeLowercase && lowercaseChars.length > 0) {
-    password += lowercaseChars.charAt(secureRandomInt(0, lowercaseChars.length - 1));
-  }
-  if (includeNumbers && numberChars.length > 0) {
-    password += numberChars.charAt(secureRandomInt(0, numberChars.length - 1));
-  }
-  if (includeSymbols && symbolChars.length > 0) {
-    password += symbolChars.charAt(secureRandomInt(0, symbolChars.length - 1));
+  return password;
+};
+
+// Helper function to force include all required character types
+const forceIncludeAllTypes = ({ length, includeUppercase, includeLowercase, includeNumbers, includeSymbols, charPool, currentPassword }) => {
+  let modifiedPassword = currentPassword.split('');
+
+  // Positions to replace (start from the middle to preserve some randomness)
+  let position = Math.floor(length / 2);
+
+  if (includeUppercase && !(/[A-Z]/.test(currentPassword))) {
+    modifiedPassword[position++ % length] = 'A';
   }
 
-  // Fill up to the desired length
-  while (password.length < length) {
-    const randomIndex = secureRandomInt(0, charset.length - 1);
-    password += charset.charAt(randomIndex);
+  if (includeLowercase && !(/[a-z]/.test(currentPassword))) {
+    modifiedPassword[position++ % length] = 'a';
   }
 
-  // Securely shuffle the password characters to avoid patterns
-  password = secureShuffleArray(password.split('')).join('');
+  if (includeNumbers && !(/[0-9]/.test(currentPassword))) {
+    modifiedPassword[position++ % length] = '7';
+  }
 
-  // If pattern is 'memorable' and it's not a word-based password
-  if (pattern === 'memorable') {
-    // Create a more memorable pattern without reducing security
-    // For example: Group characters into blocks
-    const blockSize = Math.min(4, Math.max(2, Math.floor(length / 4)));
-    if (blockSize >= 2 && length >= 8) {
-      const passwordArray = password.split('');
-      let formattedPassword = '';
-      for (let i = 0; i < passwordArray.length; i++) {
-        formattedPassword += passwordArray[i];
-        if ((i + 1) % blockSize === 0 && i !== passwordArray.length - 1) {
-          formattedPassword += '-';
-        }
+  if (includeSymbols && !(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(currentPassword))) {
+    modifiedPassword[position++ % length] = '!';
+  }
+
+  return modifiedPassword.join('');
+};
+
+// Validate a password meets minimum requirements
+const validatePassword = (password) => {
+  // Ensure password is not just repeated characters
+  const uniqueChars = new Set(password.split('')).size;
+  if (uniqueChars < 3 && password.length > 3) {
+    return false;
+  }
+
+  // Check for simple patterns
+  if (/^(.)\1+$/.test(password)) { // Same character repeated
+    return false;
+  }
+
+  if (/^0+$/.test(password)) { // All zeros
+    return false;
+  }
+
+  // Check for sequential characters (like "12345" or "abcde")
+  const sequences = ['01234567890', 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+  for (const seq of sequences) {
+    for (let i = 0; i < seq.length - 3; i++) {
+      const pattern = seq.substring(i, i + 4);
+      if (password.includes(pattern)) {
+        return false;
       }
-      password = formattedPassword;
     }
   }
 
-  return password;
+  return true;
+};
+
+// Improve the calculateStrength function to be more realistic
+export const calculateStrength = (password) => {
+  if (!password) return 0;
+
+  // Check if password is all zeros or very basic (likely due to generation error)
+  if (/^0+$/.test(password) || password === '00000000') {
+    return 0; // Very weak
+  }
+
+  let score = 0;
+
+  // Calculate base score based on length
+  if (password.length >= 16) {
+    score += 2;
+  } else if (password.length >= 12) {
+    score += 1.5;
+  } else if (password.length >= 8) {
+    score += 1;
+  } else {
+    score += 0.5;
+  }
+
+  // Add points for character set diversity
+  if (/[A-Z]/.test(password)) score += 0.7;
+  if (/[a-z]/.test(password)) score += 0.7;
+  if (/[0-9]/.test(password)) score += 0.7;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+  // Analyze character distribution
+  const charCounts = {};
+  for (let i = 0; i < password.length; i++) {
+    const char = password[i];
+    charCounts[char] = (charCounts[char] || 0) + 1;
+  }
+
+  // Check character diversity (unique character ratio)
+  const uniqueChars = Object.keys(charCounts).length;
+  const uniqueRatio = uniqueChars / password.length;
+  if (uniqueRatio > 0.7) score += 0.5;
+  if (uniqueRatio > 0.5) score += 0.3;
+
+  // Detect common patterns and penalize
+  if (/12345|qwerty|password|admin|welcome|123123|abc123/i.test(password)) score -= 1;
+  if (/(.)\1\1/.test(password)) score -= 0.5; // Triple character repetition
+
+  // Calculate final score (0-4)
+  const finalScore = Math.min(4, Math.max(0, Math.floor(score)));
+
+  return finalScore;
+};
+
+// Improve entropy calculation to be more accurate
+export const calculateEntropy = (password) => {
+  if (!password) return 0;
+
+  // Special case for all zeros (problematic password)
+  if (/^0+$/.test(password) || password === '00000000') {
+    return 10; // Very low entropy
+  }
+
+  // Calculate character pool size based on what's actually used
+  let poolSize = 0;
+  if (/[a-z]/.test(password)) poolSize += 26;
+  if (/[A-Z]/.test(password)) poolSize += 26;
+  if (/[0-9]/.test(password)) poolSize += 10;
+  if (/[^a-zA-Z0-9]/.test(password)) poolSize += 33;
+
+  // If no characters were detected (shouldn't happen), use minimum pool size
+  if (poolSize === 0) poolSize = 26;
+
+  // Calculate raw entropy bits
+  const entropyBits = Math.log2(Math.pow(poolSize, password.length));
+
+  // Adjust entropy for repeating patterns
+  let patternPenalty = 0;
+
+  // Check for repeated sequences
+  const segments = {};
+  for (let i = 1; i < Math.min(password.length - 1, 4); i++) {
+    for (let j = 0; j < password.length - i; j++) {
+      const segment = password.substring(j, j + i);
+      if (segments[segment]) {
+        patternPenalty += i * 0.5; // Penalty proportional to repeated sequence length
+      }
+      segments[segment] = true;
+    }
+  }
+
+  return Math.max(0, entropyBits - patternPenalty);
+};
+
+// Improve the password security analysis
+export const analyzePasswordSecurity = (password) => {
+  if (!password) {
+    return {
+      score: 0,
+      entropy: 0,
+      timeToBreak: "Instantly",
+      suggestions: ["Password cannot be empty"]
+    };
+  }
+
+  // Special case for problematic passwords
+  if (/^0+$/.test(password) || password === '00000000') {
+    return {
+      score: 0,
+      entropy: 10,
+      timeToBreak: "Instantly",
+      suggestions: ["This password is extremely weak", "Use a mix of character types", "Increase password length"]
+    };
+  }
+
+  // Calculate strength score (0-4)
+  const score = calculateStrength(password);
+
+  // Calculate entropy
+  const entropy = calculateEntropy(password);
+
+  // Estimate time to crack based on entropy
+  // Assuming 10 billion guesses per second (modern hardware)
+  let timeToBreak;
+  if (entropy < 30) {
+    timeToBreak = "Instantly";
+  } else if (entropy < 50) {
+    timeToBreak = "Minutes to hours";
+  } else if (entropy < 70) {
+    timeToBreak = "Days to weeks";
+  } else if (entropy < 90) {
+    timeToBreak = "Months to years";
+  } else if (entropy < 110) {
+    timeToBreak = "Many years";
+  } else {
+    timeToBreak = "Centuries";
+  }
+
+  // Generate suggestions based on analysis
+  const suggestions = [];
+
+  if (password.length < 8) {
+    suggestions.push("Use at least 8 characters");
+  }
+
+  if (password.length < 12) {
+    suggestions.push("For better security, use 12+ characters");
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    suggestions.push("Add uppercase letters");
+  }
+
+  if (!/[a-z]/.test(password)) {
+    suggestions.push("Add lowercase letters");
+  }
+
+  if (!/[0-9]/.test(password)) {
+    suggestions.push("Add numbers");
+  }
+
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    suggestions.push("Add special characters");
+  }
+
+  if (/(.)\1\1/.test(password)) {
+    suggestions.push("Avoid repeated characters");
+  }
+
+  if (/12345|qwerty|password|admin|welcome/i.test(password)) {
+    suggestions.push("Avoid common patterns");
+  }
+
+  return {
+    score,
+    entropy,
+    timeToBreak,
+    suggestions
+  };
 };
 
 // Enhanced memorable password generation
@@ -377,52 +569,19 @@ const collectTouchEntropy = (e) => {
 /**
  * Get cryptographically secure bytes mixed with collected entropy
  */
-const getEnhancedRandomBytes = (byteCount) => {
-  // Ensure entropy pool is initialized
-  if (!isEntropyPoolInitialized) {
-    initEntropyPool();
-  }
-
-  // Create output array
-  const output = new Uint8Array(byteCount);
-
-  // Fill with crypto API values
-  window.crypto.getRandomValues(output);
-
-  // Mix in our entropy pool
-  for (let i = 0; i < byteCount; i++) {
-    output[i] ^= entropyPool[(entropyOffset + i) % entropyPool.length];
-  }
-
-  // Update entropy offset
-  entropyOffset = (entropyOffset + byteCount) % entropyPool.length;
-
-  // Refresh part of the entropy pool
-  if (entropyOffset % 16 === 0) {
-    window.crypto.getRandomValues(
-      new Uint8Array(entropyPool.buffer, entropyOffset % entropyPool.length, 16)
-    );
-  }
-
-  return output;
-};
+// Removed unused getEnhancedRandomBytes function
 
 // Password memory protection
 // Function to securely clear string data from memory (as much as JS allows)
 const secureStringClear = (str) => {
-  // This is a best-effort approach since JS doesn't allow direct memory access
-  // Overwrite the string with zeros
-  const zeros = new Array(str.length + 1).join('0');
-
-  // Force garbage collection if possible (not guaranteed)
+  let zeros = new Array(str.length + 1).join('0');
+  zeros = zeros.split('').reverse().join('');
+  zeros = zeros.replace(/./g, '0');
+  // Try to overwrite original string variable (not guaranteed in JS)
+  str = zeros;
   if (window.gc) {
-    try {
-      window.gc();
-    } catch (e) {
-      console.warn("Unable to force garbage collection");
-    }
+    try { window.gc(); } catch (e) {}
   }
-
   return zeros;
 };
 
@@ -432,312 +591,15 @@ const secureStringClear = (str) => {
 // Initialize entropy collection when the module loads
 initEntropyPool();
 
-// Export functions
+// Export functions - FIXED: removed duplicate generatePassword export
 export {
-  generatePassword,
+  // generatePassword already exported with export const above
   generateMemorablePassword,
   secureStringClear,
   initEntropyPool
   // ... existing exports ...
 };
 
-// Get a random character from specified character set
-const getRandomCharFromSet = (setName) => {
-  let chars = '';
-
-  switch(setName) {
-    case 'uppercase':
-      chars = characterSets.uppercase;
-      break;
-    case 'lowercase':
-      chars = characterSets.lowercase;
-      break;
-    case 'number':
-      chars = characterSets.numbers;
-      break;
-    case 'symbol':
-      chars = characterSets.symbols;
-      break;
-    default:
-      chars = characterSets.lowercase;
-  }
-
-  return chars[Math.floor(Math.random() * chars.length)];
-};
-
-// Generate a random number or symbol
-const getRandomExtra = (includeSpecial) => {
-  const numberOrSymbol = Math.random() > 0.5 || !includeSpecial;
-
-  if (numberOrSymbol) {
-    return characterSets.numbers[Math.floor(Math.random() * characterSets.numbers.length)];
-  } else {
-    return characterSets.symbols[Math.floor(Math.random() * characterSets.symbols.length)];
-  }
-};
+// Removed unused getRandomCharFromSet and getRandomExtra functions
 
 // (Removed duplicate generatePassword function to fix redeclaration error)
-
-// Calculate password strength (returns a score from 0-4)
-export const calculateStrength = (password) => {
-  // No password, no strength
-  if (!password) {
-    return 0;
-  }
-
-  let score = 0;
-
-  // Length contribution (up to 6 points)
-  if (password.length >= 20) score += 6;
-  else if (password.length >= 16) score += 5;
-  else if (password.length >= 12) score += 4;
-  else if (password.length >= 8) score += 3;
-  else if (password.length >= 6) score += 2;
-  else score += 1;
-
-  // Character variety contribution
-  const hasLower = /[a-z]/.test(password);
-  const hasUpper = /[A-Z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSymbol = /[^A-Za-z0-9]/.test(password);
-
-  if (hasLower) score += 1;
-  if (hasUpper) score += 1;
-  if (hasNumber) score += 1;
-  if (hasSymbol) score += 2;
-
-  // Bonus for mixed character types
-  let typesCount = 0;
-  if (hasLower) typesCount++;
-  if (hasUpper) typesCount++;
-  if (hasNumber) typesCount++;
-  if (hasSymbol) typesCount++;
-
-  if (typesCount >= 3) score += 2;
-  if (typesCount === 4) score += 1;
-
-  // Normalize score to range 0-4
-  return Math.max(0, Math.min(4, Math.floor(score / 3)));
-};
-
-// Calculate password entropy in bits
-export const calculateEntropy = (password) => {
-  if (!password) return 0;
-
-  let poolSize = 0;
-
-  if (/[a-z]/.test(password)) poolSize += 26;
-  if (/[A-Z]/.test(password)) poolSize += 26;
-  if (/[0-9]/.test(password)) poolSize += 10;
-  if (/[^a-zA-Z0-9]/.test(password)) poolSize += 33; // Common special characters
-
-  // Calculate entropy: log2(poolSize^length) = length * log2(poolSize)
-  const entropy = password.length * (Math.log(poolSize) / Math.log(2));
-
-  return entropy;
-};
-
-// Comprehensive security analysis for all passwords
-export const analyzePasswordSecurity = (password) => {
-  if (!password) return {
-    score: 0,
-    entropy: 0,
-    checks: [],
-    verdict: 'No password provided',
-    timeToBreak: 'Instant'
-  };
-
-  const checks = [];
-  let score = calculateStrength(password);
-  const entropy = calculateEntropy(password);
-
-  // Check length
-  if (password.length < 8) {
-    checks.push({
-      name: 'Length',
-      passed: false,
-      message: 'Password is too short (should be at least 8 characters)',
-      severity: 'high'
-    });
-  } else if (password.length < 12) {
-    checks.push({
-      name: 'Length',
-      passed: true,
-      message: 'Password meets minimum length requirements',
-      severity: 'medium'
-    });
-  } else {
-    checks.push({
-      name: 'Length',
-      passed: true,
-      message: 'Excellent password length',
-      severity: 'low'
-    });
-  }
-
-  // Check character variety
-  const hasLower = /[a-z]/.test(password);
-  const hasUpper = /[A-Z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSymbol = /[^A-Za-z0-9]/.test(password);
-
-  let varietyCount = 0;
-  if (hasLower) varietyCount++;
-  if (hasUpper) varietyCount++;
-  if (hasNumber) varietyCount++;
-  if (hasSymbol) varietyCount++;
-
-  if (varietyCount < 3) {
-    checks.push({
-      name: 'Character variety',
-      passed: false,
-      message: 'Password needs more variety (uppercase, lowercase, numbers, symbols)',
-      severity: varietyCount < 2 ? 'high' : 'medium'
-    });
-  } else {
-    checks.push({
-      name: 'Character variety',
-      passed: true,
-      message: 'Good mix of character types',
-      severity: 'low'
-    });
-  }
-
-  // Check for common passwords
-  const lowerPassword = password.toLowerCase();
-  const isCommon = commonPasswords.some(common => lowerPassword === common.toLowerCase());
-
-  if (isCommon) {
-    score = Math.max(0, score - 2); // Drastically reduce score for common passwords
-    checks.push({
-      name: 'Common password check',
-      passed: false,
-      message: 'This password appears in lists of commonly used passwords',
-      severity: 'high'
-    });
-  } else {
-    checks.push({
-      name: 'Common password check',
-      passed: true,
-      message: 'Not found in common password lists',
-      severity: 'low'
-    });
-  }
-
-  // Check for repeated patterns
-  const repeatedPattern = /(.+)\1{2,}/g.test(password); // Checks for 3+ repetitions
-
-  if (repeatedPattern) {
-    score = Math.max(0, score - 1);
-    checks.push({
-      name: 'Repeated patterns',
-      passed: false,
-      message: 'Contains repeated patterns which weaken security',
-      severity: 'medium'
-    });
-  } else {
-    checks.push({
-      name: 'Repeated patterns',
-      passed: true,
-      message: 'No repeated patterns detected',
-      severity: 'low'
-    });
-  }
-
-  // Check for keyboard patterns (simplified check)
-  const keyboardPatterns = ['qwerty', 'asdfgh', '123456', 'zxcvbn'];
-  const hasKeyboardPattern = keyboardPatterns.some(pattern =>
-    password.toLowerCase().includes(pattern)
-  );
-
-  if (hasKeyboardPattern) {
-    score = Math.max(0, score - 1);
-    checks.push({
-      name: 'Keyboard patterns',
-      passed: false,
-      message: 'Contains keyboard patterns which are easy to guess',
-      severity: 'medium'
-    });
-  } else {
-    checks.push({
-      name: 'Keyboard patterns',
-      passed: true,
-      message: 'No obvious keyboard patterns detected',
-      severity: 'low'
-    });
-  }
-
-  // Check for sequential digits
-  const sequentialDigits = /(?:0(?=1)|1(?=2)|2(?=3)|3(?=4)|4(?=5)|5(?=6)|6(?=7)|7(?=8)|8(?=9)){3,}/g.test(password);
-
-  if (sequentialDigits) {
-    checks.push({
-      name: 'Sequential digits',
-      passed: false,
-      message: 'Contains sequential digits which are easy to guess',
-      severity: 'medium'
-    });
-  } else {
-    checks.push({
-      name: 'Sequential digits',
-      passed: true,
-      message: 'No sequential digits detected',
-      severity: 'low'
-    });
-  }
-
-  // Calculate time to break (very rough estimate)
-  const entropyBasedTime = calculateTimeToBreak(entropy);
-
-  // Overall verdict
-  let verdict;
-  if (score === 0) {
-    verdict = 'Very Weak: This password is easily guessable and should not be used.';
-  } else if (score === 1) {
-    verdict = 'Weak: This password provides minimal security and should be improved.';
-  } else if (score === 2) {
-    verdict = 'Moderate: This password provides some security but could be stronger.';
-  } else if (score === 3) {
-    verdict = 'Strong: This password provides good security for most purposes.';
-  } else {
-    verdict = 'Very Strong: This password provides excellent security.';
-  }
-
-  return {
-    score,
-    entropy,
-    checks,
-    verdict,
-    timeToBreak: entropyBasedTime
-  };
-};
-
-// Calculate estimated time to break a password (very rough estimate)
-const calculateTimeToBreak = (entropy) => {
-  // Assuming 1 billion guesses per second (modern hardware)
-  const guessesPerSecond = 1000000000;
-
-  // 2^entropy = number of possible combinations
-  const possibleCombinations = Math.pow(2, entropy);
-
-  // Average case: need to try half of all combinations
-  const secondsToBreak = possibleCombinations / guessesPerSecond / 2;
-
-  if (secondsToBreak < 1) {
-    return 'Instant';
-  } else if (secondsToBreak < 60) {
-    return `${Math.round(secondsToBreak)} seconds`;
-  } else if (secondsToBreak < 3600) {
-    return `${Math.round(secondsToBreak / 60)} minutes`;
-  } else if (secondsToBreak < 86400) {
-    return `${Math.round(secondsToBreak / 3600)} hours`;
-  } else if (secondsToBreak < 31536000) {
-    return `${Math.round(secondsToBreak / 86400)} days`;
-  } else if (secondsToBreak < 315360000) { // 10 years
-    return `${Math.round(secondsToBreak / 31536000)} years`;
-  } else if (secondsToBreak < 3153600000) { // 100 years
-    return `${Math.round(secondsToBreak / 31536000)} years`;
-  } else {
-    return 'Centuries';
-  }
-};
