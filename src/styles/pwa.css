@@ -26,6 +26,11 @@
     padding-top: 0 !important;
     margin-top: 0 !important;
     border-top: none !important;
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh */
+    -webkit-touch-callout: none; /* Disable callout when touching and holding */
+    -webkit-user-select: none; /* Disable text selection */
+    user-select: none;
+    touch-action: manipulation; /* Optimize touch actions */
   }
   
   /* Force all spacers to be hidden by default */
@@ -108,6 +113,29 @@
         position: relative;
         z-index: 9001;
       }
+    }
+
+    /* iPhone notch safe area */
+    .pwa-mobile-status-bar {
+      display: block !important;
+      height: env(safe-area-inset-top, 44px) !important;
+      min-height: 44px;
+      width: 100%;
+      z-index: 9999;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+    
+    /* Ensure the app content doesn't hide behind the status bar */
+    header.sticky-header {
+      top: env(safe-area-inset-top, 44px) !important;
+    }
+    
+    /* Account for status bar in main content area */
+    main {
+      padding-top: env(safe-area-inset-top, 44px);
     }
   }
 
@@ -211,6 +239,24 @@
     body, .container {
       padding-left: max(16px, env(safe-area-inset-left, 0)) !important;
       padding-right: max(16px, env(safe-area-inset-right, 0)) !important;
+    }
+  }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    /* Ensure safe area is respected */
+    :root {
+      --sat: env(safe-area-inset-top);
+      --sar: env(safe-area-inset-right);
+      --sab: env(safe-area-inset-bottom);
+      --sal: env(safe-area-inset-left);
+    }
+    
+    /* Prevent content from being pushed under status bar */
+    body {
+      padding-top: env(safe-area-inset-top, 0);
     }
   }
 }
