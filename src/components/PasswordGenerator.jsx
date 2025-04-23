@@ -1273,7 +1273,7 @@ const handleBackToShare = () => {
       <SecurityBanner darkMode={darkMode} />
 
       {/* Ultra-compact header optimized for PWA mode */}
-<header className={`py-0.5 pt-safe ${darkMode ? 'bg-dark-800/80 border-dark-700' : 'bg-white border-slate-200 shadow-sm'} border-b backdrop-blur-md sticky top-0 z-10 transition-all duration-300 flex items-center`}>
+<header className={`py-0.5 pt-safe ${darkMode ? 'bg-dark-800/80 border-dark-700' : 'bg-white border-slate-200 shadow-sm'} border-b backdrop-blur-md sticky top-0 z-50 transition-all duration-300 flex items-center sticky-header`}>
   <div className="container mx-auto px-2">
     <div className="flex items-center justify-between">
       {/* Brand/logo with larger size in PWA */}
@@ -1410,6 +1410,38 @@ const handleBackToShare = () => {
     header h1 {
       font-size: 1.35rem !important;
       line-height: 1.1 !important;
+    }
+  }
+`}</style>
+
+{/* Add CSS for improved sticky header */}
+<style jsx global>{`
+  /* Global sticky header styles */
+  .sticky-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    width: 100% !important;
+  }
+  
+  /* Adjust for PWA mode and mobile devices */
+  @media (display-mode: standalone) {
+    @media (max-width: 768px), (pointer: coarse) {
+      .sticky-header {
+        top: env(safe-area-inset-top, 44px) !important;
+      }
+    }
+  }
+  
+  /* Override height to ensure proper sizing */
+  header .container {
+    min-height: 48px;
+  }
+  
+  /* Fix iOS sticky header issue */
+  @supports (-webkit-touch-callout: none) {
+    .sticky-header {
+      position: -webkit-sticky !important;
     }
   }
 `}</style>

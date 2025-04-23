@@ -1,8 +1,6 @@
 # Build settings
 [build]
-  # Directory to publish (the build output directory for React)
   publish = "build"
-  # Default build command
   command = "npm run build"
 
 # Handle SPA routing - redirect all paths to index.html so React Router works
@@ -17,23 +15,37 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Cache control for PWA assets
+# PWA manifest file - critical for proper installation
 [[headers]]
-  for = "/*.webmanifest"
+  for = "/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=3600"
+    Service-Worker-Allowed = "/"
 
+# Service worker - no caching to ensure immediate updates
 [[headers]]
   for = "/serviceWorker.js"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+# Root HTML file - important for PWA status bar
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    # These headers help fix mobile viewport issues
+    Feature-Policy = "accelerometer 'none'; camera 'none'; geolocation 'none'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'"
 
 # Handle favicon and icons with appropriate caching
 [[headers]]
   for = "/*.png"
   [headers.values]
-    Cache-Control = "public, max-age=604800"
+    Cache-Control = "public, max-age=86400"
 
 [[headers]]
   for = "/*.ico"
@@ -44,11 +56,9 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.pwnedpasswords.com; font-src 'self'; object-src 'none'; media-src 'none'; frame-src 'none'; worker-src 'self' blob:; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
 
 # Configure plugins if needed
