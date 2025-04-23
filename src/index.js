@@ -50,7 +50,7 @@ class ErrorBoundary extends React.Component {
 }
 
 // Ensure public URL is properly handled for production
-const rootElement = document.getElementById('root');
+let rootElement = document.getElementById('root');
 
 // Update manifest paths if needed
 const updateManifestPath = () => {
@@ -356,4 +356,51 @@ try {
       </div>
     `;
   }
+}
+
+// Add error boundary to catch rendering errors
+// At the root level, make sure there's error handling
+// rootElement is already defined above
+
+// Helper to ensure the loading indicator is removed
+const removeLoadingIndicator = () => {
+  const loadingElement = document.getElementById('loading-overlay') || 
+                         document.getElementById('loading-screen') || 
+                         document.querySelector('.loading-indicator');
+  
+  if (loadingElement) {
+    loadingElement.style.display = 'none';
+    if (loadingElement.parentNode) {
+      loadingElement.parentNode.removeChild(loadingElement);
+    }
+  }
+};
+
+// Make sure loading indicator is removed after app is mounted
+const renderApp = () => {
+  ReactDOM.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+    rootElement
+  );
+  
+  // Give the app a moment to initialize, then remove any remaining loading indicators
+  setTimeout(removeLoadingIndicator, 1000);
+};
+
+// Remove loading indicator if there's a rendering error
+try {
+  renderApp();
+} catch (error) {
+  console.error('Error rendering app:', error);
+  removeLoadingIndicator();
+  
+  // Show error message to user
+  rootElement.innerHTML = `
+    <div style="text-align: center; padding: 2rem;">
+      <h2>Something went wrong</h2>
+      <p>Please refresh the page to try again.</p>
+    </div>
+  `;
 }

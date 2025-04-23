@@ -28,6 +28,7 @@ function App() {
     localStorage.getItem('darkMode') === 'true' ||
     window.matchMedia('(prefers-color-scheme: dark)').matches
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('darkMode', darkMode);
@@ -62,6 +63,39 @@ function App() {
       }
     }
   }, [i18n]);
+
+  // Add a timeout to ensure loading state is cleared even if something goes wrong
+  useEffect(() => {
+    if (isLoading) {
+      // Force loading to end after 5 seconds if it hasn't already
+      const loadingTimeout = setTimeout(() => {
+        setIsLoading(false);
+        console.log('Loading timed out - forcing completion');
+      }, 5000); // 5 second timeout
+
+      // Cleanup timeout if loading ends normally
+      return () => clearTimeout(loadingTimeout);
+    }
+  }, [isLoading]);
+
+  // In your loading/initialization code, ensure error handling is in place
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        setIsLoading(true);
+        // Your existing initialization code here
+        
+        // Ensure proper loading state reset
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Initialization error:", error);
+        // Always reset loading state even if there's an error
+        setIsLoading(false);
+      }
+    };
+
+    initializeApp();
+  }, []);
 
   const isAuthenticated = localStorage.getItem('sessionId') !== null;
 
