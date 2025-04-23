@@ -6,7 +6,7 @@
     <!-- Updated viewport settings for better PWA experience -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no, user-scalable=no, maximum-scale=1" />
 
-    <!-- Balanced Content Security Policy that works with React -->
+    <!-- Enhanced Content Security Policy for better security -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval';
@@ -15,27 +15,33 @@
       connect-src 'self' https://api.pwnedpasswords.com;
       font-src 'self';
       object-src 'none';
+      media-src 'none';
+      frame-src 'none';
       worker-src 'self' blob:;
+      manifest-src 'self';
       base-uri 'self';
       form-action 'self';
+      frame-ancestors 'none';
+      block-all-mixed-content;
+      upgrade-insecure-requests;
     ">
 
-    <!-- Prevent XSS attacks -->
+    <!-- Improved security headers -->
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-
-    <!-- Prevent MIME type sniffing -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-
-    <!-- Prevent clickjacking -->
     <meta http-equiv="X-Frame-Options" content="DENY">
-
-    <!-- Referrer Policy -->
-    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Referrer-Policy" content="no-referrer">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
 
     <!-- Theme colors for different contexts -->
     <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1e3a8a" media="(prefers-color-scheme: dark)" />
     <meta name="msapplication-navbutton-color" content="#3b82f6" />
+    
+    <!-- Status bar color for PWA mode - light theme -->
+    <meta name="theme-color" content="#e0f2fe" media="(prefers-color-scheme: light)" />
+    <!-- Status bar color for PWA mode - dark theme -->
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
 
     <!-- CSS fallback for browsers that don't support theme-color -->
     <style>
@@ -49,7 +55,7 @@
         }
       }
 
-      /* PWA mode specific styling - IMPROVED */
+      /* FIXED: PWA mode specific styling that distinguishes between mobile and desktop */
       @media (display-mode: standalone) {
         body {
           padding-top: 0 !important;
@@ -57,20 +63,30 @@
           border-top: none !important;
         }
 
-        /* Enhanced status bar spacer with fallback height */
-        .pwa-status-bar-spacer {
-          display: block !important;
-          height: env(safe-area-inset-top, 44px) !important;
-          min-height: 44px !important;
-          width: 100% !important;
-          position: relative;
-          z-index: 9000 !important;
-          background-color: #0f172a;
-          color: transparent;
+        /* Only show status bar spacer on mobile devices */
+        @media (max-width: 768px) {
+          .pwa-status-bar-spacer {
+            display: block !important;
+            height: env(safe-area-inset-top, 44px) !important;
+            min-height: 44px !important;
+            width: 100% !important;
+            position: relative;
+            z-index: 9000 !important;
+            background-color: #0f172a;
+            color: transparent;
+          }
+        }
+
+        /* Hide status bar spacer on desktop */
+        @media (min-width: 769px) {
+          .pwa-status-bar-spacer {
+            display: none !important;
+            height: 0 !important;
+          }
         }
 
         /* Light mode status bar */
-        @media (prefers-color-scheme: light) {
+        @media (prefers-color-scheme: light) and (max-width: 768px) {
           .pwa-status-bar-spacer {
             background-color: #e0e7ff;
           }
@@ -101,17 +117,19 @@
           line-height: 1.1 !important;
         }
 
-        /* Properly handle notched devices */
+        /* Properly handle notched devices on mobile only */
         @supports (padding-top: env(safe-area-inset-top)) {
-          #root header:before {
-            content: '';
-            height: env(safe-area-inset-top);
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: -1;
+          @media (max-width: 768px) {
+            #root header:before {
+              content: '';
+              height: env(safe-area-inset-top);
+              display: block;
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              z-index: -1;
+            }
           }
         }
       }
@@ -194,6 +212,254 @@
           background-color: #3b82f6;
         }
       }
+
+      /* Enhanced PWA detection - hide status bar on desktop */
+      @media (display-mode: standalone) {
+        /* Force all spacers hidden by default */
+        .pwa-status-bar-spacer {
+          display: none !important;
+          height: 0 !important;
+        }
+        
+        /* Only show on mobile devices */
+        @media (max-width: 768px) and (pointer: coarse) {
+          .pwa-status-bar-spacer {
+            display: block !important;
+            height: env(safe-area-inset-top, 44px) !important;
+          }
+        }
+        
+        /* Make sure desktop doesn't show the bar */
+        @media (min-width: 769px), (pointer: fine) {
+          .pwa-status-bar-spacer {
+            display: none !important;
+            height: 0 !important;
+            max-height: 0 !important;
+            overflow: hidden !important;
+          }
+        }
+      }
+
+      /* DESKTOP PWA STATUS BAR FIX - AGGRESSIVE APPROACH */
+      @media (display-mode: standalone) {
+        /* Force remove all top spacing on body */
+        body {
+          padding-top: 0 !important;
+          margin-top: 0 !important;
+          border-top: none !important;
+        }
+        
+        /* Completely disable the spacer by default with multiple properties */
+        .pwa-status-bar-spacer {
+          display: none !important;
+          height: 0 !important;
+          min-height: 0 !important;
+          max-height: 0 !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          border: none !important;
+          outline: none !important;
+          opacity: 0 !important;
+          visibility: hidden !important;
+          overflow: hidden !important;
+          position: absolute !important;
+          pointer-events: none !important;
+        }
+        
+        /* Only enable on actual mobile devices with precise targeting */
+        @media (max-width: 768px) and (pointer: coarse) and (hover: none) {
+          .pwa-status-bar-spacer {
+            display: block !important;
+            height: env(safe-area-inset-top, 44px) !important;
+            min-height: 44px !important;
+            width: 100% !important;
+            position: relative !important;
+            z-index: 9000 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            overflow: visible !important;
+          }
+        }
+        
+        /* Desktop-specific overrides - redundant but belt-and-suspenders approach */
+        @media (min-width: 769px), (pointer: fine) {
+          .pwa-status-bar-spacer {
+            display: none !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            max-height: 0 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+          }
+          
+          /* Ensure no other element creates unwanted space */
+          body::before, 
+          body::after,
+          #root::before,
+          #root::after {
+            content: none !important;
+            display: none !important;
+            height: 0 !important;
+          }
+        }
+      }
+
+      /* Enhanced loading animation styles */
+      #enhanced-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e1f5fe 100%);
+        z-index: 9999;
+        transition: opacity 0.4s ease-out;
+      }
+      
+      .dark-theme #enhanced-loader {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      }
+      
+      .loader-container {
+        text-align: center;
+        max-width: 400px;
+        padding: 2rem;
+      }
+      
+      .spinner-container {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+      }
+
+      .spinner {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 4px solid transparent;
+        border-top-color: #3b82f6;
+        animation: spin 1s linear infinite;
+      }
+
+      .spinner:nth-child(2) {
+        border-top-color: transparent;
+        border-right-color: #3b82f6;
+        animation-delay: 0.2s;
+      }
+
+      .spinner:nth-child(3) {
+        border-top-color: transparent;
+        border-right-color: transparent;
+        border-bottom-color: #3b82f6;
+        animation-delay: 0.4s;
+      }
+
+      .shield-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        color: #3b82f6;
+      }
+
+      .loader-title {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        margin-bottom: 8px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
+      }
+
+      .loader-subtitle {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 16px;
+        color: #334155;
+        margin: 0;
+        margin-bottom: 20px;
+      }
+
+      .dark-theme .loader-subtitle {
+        color: #94a3b8;
+      }
+
+      .loader-progress-container {
+        width: 100%;
+        height: 6px;
+        background-color: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .dark-theme .loader-progress-container {
+        background-color: #334155;
+      }
+
+      .loader-progress-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        border-radius: 3px;
+        animation: progress 2s ease-in-out forwards;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes progress {
+        0% { width: 0%; }
+        50% { width: 70%; }
+        100% { width: 100%; }
+      }
+
+      /* Animated dot effect */
+      .animated-dots::after {
+        content: '.';
+        animation: dots 1.5s steps(5, end) infinite;
+      }
+
+      @keyframes dots {
+        0%, 20% { content: '.'; }
+        40% { content: '..'; }
+        60% { content: '...'; }
+        80%, 100% { content: ''; }
+      }
+
+      /* Check for dark mode */
+      @media (prefers-color-scheme: dark) {
+        html:not(.light-theme) {
+          background-color: #0f172a;
+        }
+        html:not(.light-theme) #enhanced-loader {
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        html:not(.light-theme) .loader-subtitle {
+          color: #94a3b8;
+        }
+        html:not(.light-theme) .loader-progress-container {
+          background-color: #334155;
+        }
+      }
     </style>
 
     <!-- Critical iOS PWA meta tags -->
@@ -221,44 +487,202 @@
     <!-- External CSS file -->
     <link rel="stylesheet" href="%PUBLIC_URL%/styles.css" />
 
-    <!-- Enhanced iOS installation banner script with browser detection -->
+    <!-- Enhanced iOS installation banner script with improved cross-browser detection -->
     <script>
-      // Cross-browser install prompt detection
+      // Cross-browser install prompt detection with enhanced platform support
       function detectBrowser() {
         const userAgent = navigator.userAgent;
 
-        // iOS detection
+        // iOS detection with specific browser identification
         if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
           return {
             type: 'iOS',
-            isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent),
+            isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent) && !/FxiOS/.test(userAgent),
             isChrome: /CriOS/.test(userAgent),
+            isFirefox: /FxiOS/.test(userAgent),
+            isInApp: /FBAN|FBAV|Instagram|Twitter|WeChat|Line\//.test(userAgent),
             standalone: window.navigator.standalone === true
           };
         }
 
-        // Android detection
+        // Android detection with improved browser identification
         if (/Android/.test(userAgent)) {
           return {
             type: 'Android',
-            isChrome: /Chrome/.test(userAgent) && !/Edg/.test(userAgent),
-            isSamsung: /SamsungBrowser/.test(userAgent),
-            isFirefox: /Firefox/.test(userAgent)
+            isChrome: /Chrome/.test(userAgent) && !/Edg/.test(userAgent) && !/Samsung/.test(userAgent),
+            isSamsung: /Samsung|SamsungBrowser/.test(userAgent),
+            isFirefox: /Firefox/.test(userAgent),
+            isInApp: /FBAN|FBAV|Instagram|Twitter|WeChat|Line\//.test(userAgent),
+            isUCBrowser: /UCBrowser/.test(userAgent),
+            isOperaTouch: /OPT\//.test(userAgent)
           };
         }
 
-        // Desktop detection
+        // Desktop detection with expanded browser support
         if (/Windows|Macintosh|Linux/.test(userAgent)) {
           return {
             type: 'Desktop',
             isChrome: /Chrome/.test(userAgent) && !/Edg/.test(userAgent),
             isFirefox: /Firefox/.test(userAgent),
             isEdge: /Edg/.test(userAgent),
-            isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent)
+            isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent),
+            isOpera: /OPR\//.test(userAgent),
+            isIE: /Trident/.test(userAgent)
           };
         }
 
         return { type: 'Unknown' };
+      }
+
+      // Universal installation instructions based on browser detection
+      function showInstallInstructions() {
+        const browser = detectBrowser();
+        let title = "Install Password Generator";
+        let instructions = "";
+        
+        // Generate appropriate instructions based on browser/platform
+        if (browser.type === 'iOS') {
+          if (browser.isSafari) {
+            instructions = `
+              <p>Follow these steps:</p>
+              <ol>
+                <li>Tap the <strong>share icon</strong> <span style="font-size:18px">⎙</span> at the bottom of the screen</li>
+                <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                <li>Tap <strong>"Add"</strong> in the top-right corner</li>
+              </ol>
+            `;
+          } else if (browser.isChrome || browser.isFirefox) {
+            instructions = `
+              <p>To install this app:</p>
+              <ol>
+                <li>Open this page in <strong>Safari</strong> instead</li>
+                <li>Tap the share icon and select "Add to Home Screen"</li>
+              </ol>
+              <p>Copy this URL to open in Safari:</p>
+              <input type="text" value="${window.location.href}" readonly style="width:100%;padding:8px;margin:8px 0;border-radius:4px;border:1px solid #ccc;font-size:14px" onclick="this.select();document.execCommand('copy')">
+            `;
+          } else if (browser.isInApp) {
+            instructions = `
+              <p>You're using an in-app browser. To install:</p>
+              <ol>
+                <li>Open this page in <strong>Safari</strong></li>
+                <li>Then use the share icon to "Add to Home Screen"</li>
+              </ol>
+              <p>Copy this URL:</p>
+              <input type="text" value="${window.location.href}" readonly style="width:100%;padding:8px;margin:8px 0;border-radius:4px;border:1px solid #ccc;font-size:14px" onclick="this.select();document.execCommand('copy')">
+            `;
+          }
+        } else if (browser.type === 'Android') {
+          if (browser.isChrome) {
+            instructions = `
+              <p>Follow these steps:</p>
+              <ol>
+                <li>Tap the menu button <strong>(⋮)</strong> in the top-right</li>
+                <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></li>
+                <li>Tap <strong>"Install"</strong> when prompted</li>
+              </ol>
+            `;
+          } else if (browser.isSamsung) {
+            instructions = `
+              <p>Follow these steps:</p>
+              <ol>
+                <li>Tap the menu button <strong>(⋮)</strong> in the bottom-right</li>
+                <li>Select <strong>"Add page to"</strong> then <strong>"Home screen"</strong></li>
+              </ol>
+            `;
+          } else if (browser.isFirefox) {
+            instructions = `
+              <p>Follow these steps:</p>
+              <ol>
+                <li>Tap the menu button (⋮) in the top-right</li>
+                <li>Select <strong>"Install"</strong> or <strong>"Add to Home screen"</strong></li>
+              </ol>
+              <p>For best results, try using Chrome on Android.</p>
+            `;
+          } else if (browser.isInApp) {
+            instructions = `
+              <p>You're using an in-app browser. To install:</p>
+              <ol>
+                <li>Open this page in <strong>Chrome</strong></li>
+                <li>Then use menu (⋮) to select "Install app"</li>
+              </ol>
+              <p>Copy this URL:</p>
+              <input type="text" value="${window.location.href}" readonly style="width:100%;padding:8px;margin:8px 0;border-radius:4px;border:1px solid #ccc;font-size:14px" onclick="this.select();document.execCommand('copy')">
+            `;
+          }
+        } else {
+          // Desktop instructions
+          instructions = `
+            <p>Follow these steps:</p>
+            <ol>
+              <li>Look for the install icon in the address bar</li>
+              <li>Click on it and follow the prompts</li>
+            </ol>
+            <p>Or use the menu options in your browser to install this app.</p>
+          `;
+        }
+
+        // Create and display installation modal
+        const modal = document.createElement('div');
+        modal.id = 'install-instructions-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.right = '0';
+        modal.style.bottom = '0';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.75)';
+        modal.style.backdropFilter = 'blur(4px)';
+        modal.style.zIndex = '999999';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.padding = '20px';
+        
+        // Detect dark mode
+        const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const backgroundColor = prefersDarkMode ? '#1e293b' : '#ffffff';
+        const textColor = prefersDarkMode ? '#e2e8f0' : '#1e293b';
+        const borderColor = prefersDarkMode ? '#475569' : '#e2e8f0';
+        
+        modal.innerHTML = `
+          <div style="background-color:${backgroundColor};color:${textColor};border-radius:16px;padding:24px;max-width:400px;width:100%;position:relative;box-shadow:0 10px 25px rgba(0,0,0,.25);border:1px solid ${borderColor}">
+            <button id="close-install-modal" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;color:#888;cursor:pointer;padding:4px 8px;line-height:1">×</button>
+            <h2 style="margin-top:0;margin-bottom:16px;font-size:20px;text-align:center">${title}</h2>
+            <div style="margin-bottom:20px">${instructions}</div>
+            <div style="display:flex;justify-content:center">
+              <button id="got-it-button" style="background:#3b82f6;color:white;border:none;padding:10px 24px;border-radius:8px;font-size:16px;cursor:pointer">Got It</button>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add event listeners for closing the modal
+        document.getElementById('close-install-modal').addEventListener('click', function() {
+          document.body.removeChild(modal);
+          localStorage.setItem('pwa-instruction-shown', 'true');
+        });
+        
+        document.getElementById('got-it-button').addEventListener('click', function() {
+          document.body.removeChild(modal);
+          localStorage.setItem('pwa-instruction-shown', 'true');
+        });
+        
+        // Copy URL functionality for any input fields
+        const inputFields = modal.querySelectorAll('input');
+        inputFields.forEach(input => {
+          input.addEventListener('click', function() {
+            this.select();
+            document.execCommand('copy');
+            
+            // Show copy feedback
+            const originalValue = this.value;
+            this.value = "URL Copied!";
+            setTimeout(() => {
+              this.value = originalValue;
+            }, 1500);
+          });
+        });
       }
 
       // Show appropriate install banner based on browser detection
@@ -266,7 +690,7 @@
         const browser = detectBrowser();
         console.log("Browser detected:", browser);
 
-        // Remove diagnostic element after 2 seconds instead of 5
+        // Remove diagnostic element after 2 seconds
         setTimeout(function() {
           const diagnostic = document.getElementById('diagnostic');
           if (diagnostic) diagnostic.style.display = 'none';
@@ -276,6 +700,7 @@
         if (browser.type === 'iOS' && browser.isSafari && !browser.standalone && !localStorage.getItem('pwa-instruction-shown')) {
           setTimeout(function() {
             const banner = document.createElement('div');
+            banner.id = 'ios-install-banner';
             banner.style.position = 'fixed';
             banner.style.bottom = '0';
             banner.style.left = '0';
@@ -295,22 +720,247 @@
                 <p style="margin: 0 0 6px 0; font-weight: 600;">Install this app</p>
                 <p style="margin: 0;">Tap <span style="font-size: 16px">⎙</span> then "Add to Home Screen"</p>
               </div>
-              <button style="background: #3b82f6; border: none; color: white; padding: 8px 12px; border-radius: 6px; margin-left: 10px; font-weight: 600; font-size: 13px;">Later</button>
+              <div>
+                <button id="show-ios-instructions" style="background: #3b82f6; border: none; color: white; padding: 8px 12px; border-radius: 6px; margin-right: 8px; font-weight: 600; font-size: 13px;">How to</button>
+                <button id="close-ios-banner" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px;">Later</button>
+              </div>
             `;
 
             document.body.appendChild(banner);
 
-            banner.querySelector('button').addEventListener('click', function() {
+            document.getElementById('show-ios-instructions').addEventListener('click', function() {
+              banner.style.display = 'none';
+              showInstallInstructions();
+            });
+
+            document.getElementById('close-ios-banner').addEventListener('click', function() {
               banner.style.display = 'none';
               localStorage.setItem('pwa-instruction-shown', 'true');
             });
           }, 2000);
         }
+        
+        // For Android Chrome, show Chrome-specific instructions if not already showing native prompt
+        else if (browser.type === 'Android' && browser.isChrome && !localStorage.getItem('pwa-instruction-shown')) {
+          // A custom banner isn't needed here as Chrome handles this natively
+          // Just make sure the manifest.webmanifest is properly configured
+        }
+        
+        // For in-app browsers and others that have limitations
+        else if ((browser.isInApp || (browser.type === 'iOS' && !browser.isSafari)) && !localStorage.getItem('pwa-instruction-shown')) {
+          setTimeout(function() {
+            const banner = document.createElement('div');
+            banner.id = 'general-install-banner';
+            banner.style.position = 'fixed';
+            banner.style.bottom = '0';
+            banner.style.left = '0';
+            banner.style.right = '0';
+            banner.style.padding = '12px 15px';
+            banner.style.background = 'rgba(0,0,0,0.85)';
+            banner.style.color = '#fff';
+            banner.style.fontSize = '14px';
+            banner.style.zIndex = '99999';
+            banner.style.display = 'flex';
+            banner.style.alignItems = 'center';
+            banner.style.justifyContent = 'space-between';
+            banner.style.boxShadow = '0 -2px 10px rgba(0,0,0,0.3)';
+
+            banner.innerHTML = `
+              <div>
+                <p style="margin: 0 0 6px 0; font-weight: 600;">Install Password Generator</p>
+                <p style="margin: 0;">Get instructions for your browser</p>
+              </div>
+              <div>
+                <button id="show-install-instructions" style="background: #3b82f6; border: none; color: white; padding: 8px 12px; border-radius: 6px; margin-right: 8px; font-weight: 600; font-size: 13px;">Show How</button>
+                <button id="close-install-banner" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px;">Later</button>
+              </div>
+            `;
+
+            document.body.appendChild(banner);
+
+            document.getElementById('show-install-instructions').addEventListener('click', function() {
+              banner.style.display = 'none';
+              showInstallInstructions();
+            });
+
+            document.getElementById('close-install-banner').addEventListener('click', function() {
+              banner.style.display = 'none';
+              localStorage.setItem('pwa-instruction-shown', 'true');
+            });
+          }, 2000);
+        }
+
+        // Add a global function to show installation instructions
+        window.showPWAInstallInstructions = showInstallInstructions;
       });
+
+      // Fix PWA status bar for desktop and restore security banner
+      document.addEventListener('DOMContentLoaded', function() {
+        // Check if we're in PWA mode
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                      window.navigator.standalone === true;
+        
+        if (isPWA) {
+          document.body.classList.add('pwa-mode');
+          
+          // Fix status bar visibility based on device type
+          const isDesktop = window.innerWidth >= 769 || 
+                            (window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+          
+          const statusBarSpacer = document.querySelector('.pwa-status-bar-spacer');
+          if (statusBarSpacer) {
+            if (isDesktop) {
+              statusBarSpacer.style.display = 'none';
+              statusBarSpacer.style.height = '0';
+            }
+          }
+          
+          // Make sure security banner remains clickable
+          const securityBanner = document.querySelector('.security-banner');
+          if (securityBanner) {
+            securityBanner.style.cursor = 'pointer';
+            securityBanner.style.pointerEvents = 'auto';
+            
+            // Add explicit click handler for the security banner
+            securityBanner.addEventListener('click', function(e) {
+              // Try to find and trigger the security info state
+              const infoButton = securityBanner.querySelector('button');
+              if (infoButton) {
+                infoButton.click();
+              }
+            });
+          }
+        }
+      });
+
+      // Aggressive fix for desktop PWA white bar and security banner
+      (function() {
+        // Execute immediately and also on DOMContentLoaded
+        function fixPWAIssues() {
+          // Check if we're in PWA mode
+          const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone === true;
+          
+          if (isPWA) {
+            // 1. Aggressively remove the status bar on desktop
+            const isDesktop = window.innerWidth >= 769 || 
+                             (window.matchMedia && (
+                              window.matchMedia('(pointer: fine)').matches || 
+                              !window.matchMedia('(hover: none)').matches
+                             ));
+            
+            if (isDesktop) {
+              // Create a style element with highest priority rules
+              const style = document.createElement('style');
+              style.innerHTML = `
+                .pwa-status-bar-spacer {
+                  display: none !important;
+                  height: 0 !important;
+                  min-height: 0 !important;
+                  max-height: 0 !important;
+                  opacity: 0 !important;
+                  visibility: hidden !important;
+                  position: absolute !important;
+                  z-index: -9999 !important;
+                  pointer-events: none !important;
+                  clip: rect(0, 0, 0, 0) !important;
+                  overflow: hidden !important;
+                }
+              `;
+              document.head.appendChild(style);
+              
+              // Remove spacer elements just to be sure
+              setTimeout(() => {
+                const spacers = document.querySelectorAll('.pwa-status-bar-spacer');
+                spacers.forEach(spacer => {
+                  spacer.style.display = 'none';
+                  spacer.style.height = '0';
+                  spacer.style.minHeight = '0';
+                  spacer.remove(); // Physically remove from DOM
+                });
+              }, 100);
+            }
+            
+            // 2. Fix security banner to be clickable
+            setTimeout(() => {
+              const securityBanners = document.querySelectorAll('[class*="security-banner"], [class*="bg-green"]');
+              securityBanners.forEach(banner => {
+                // Make clickable and visible
+                banner.style.pointerEvents = 'auto';
+                banner.style.cursor = 'pointer';
+                banner.style.userSelect = 'none';
+                
+                // Add enhanced click handler
+                banner.addEventListener('click', function(e) {
+                  // Try multiple approaches to trigger showing security info
+                  
+                  // 1. Look for info button and click it
+                  const infoBtn = banner.querySelector('button');
+                  if (infoBtn) {
+                    e.stopPropagation();
+                    infoBtn.click();
+                    return;
+                  }
+                  
+                  // 2. Look for React components by class/data attributes
+                  const securityInfo = document.querySelector(
+                    '.security-info, [data-security-info], [data-testid="security-info"]'
+                  );
+                  
+                  if (securityInfo && typeof securityInfo.click === 'function') {
+                    securityInfo.click();
+                    return;
+                  }
+                  
+                  // 3. Dispatch custom event that React component can listen for
+                  banner.dispatchEvent(new CustomEvent('toggleSecurityInfo', { 
+                    bubbles: true 
+                  }));
+                  
+                  // 4. Try to access React internals through DOM properties
+                  if (banner._reactRootContainer) {
+                    // This is a bit hacky but might work in some cases
+                    console.log("Attempting to trigger React event through DOM");
+                  }
+                });
+              });
+            }, 500);
+          }
+        }
+        
+        // Execute immediately
+        fixPWAIssues();
+        
+        // Also execute when DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', fixPWAIssues);
+        
+        // And after a delay to catch late-rendered components
+        setTimeout(fixPWAIssues, 1000);
+      })();
     </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <!-- Enhanced Loading Animation -->
+    <div id="enhanced-loader">
+      <div class="loader-container">
+        <div class="spinner-container">
+          <div class="spinner"></div>
+          <div class="spinner"></div>
+          <div class="spinner"></div>
+          <svg class="shield-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 class="loader-title">Lockora</h1>
+        <p class="loader-subtitle">Secure Password Generator<span class="animated-dots"></span></p>
+        <div class="loader-progress-container">
+          <div class="loader-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="root">
       <!-- Initial loading state -->
       <div id="fallback-content">
@@ -321,6 +971,34 @@
     </div>
 
     <script>
+      // Check if dark mode is enabled
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark-theme');
+      }
+
+      // Remove loader when app is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+          const loader = document.getElementById('enhanced-loader');
+          if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+              if (loader.parentNode) {
+                loader.parentNode.removeChild(loader);
+              }
+            }, 400);
+          }
+        }, 1000); // Give the app at least 1 second to load
+
+        // Fallback - hide loader if it's still visible after 5 seconds
+        setTimeout(() => {
+          const loader = document.getElementById('enhanced-loader');
+          if (loader && loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 5000);
+      });
+
       // Show error message if app fails to load within 10 seconds
       setTimeout(function() {
         var root = document.getElementById('root');

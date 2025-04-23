@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { X, QrCode, ArrowLeft, Copy, Check, Download } from 'lucide-react';
 import QRCode from 'qrcode.react';
 
-const QRCodeModal = ({ isOpen, onClose, password, darkMode, previousModal, onBackToShare }) => {
+const QRCodeModal = ({ isOpen, onClose, password, darkMode, previousModal, onBackToShare, captureOptions = {} }) => {
   const [qrSize, setQrSize] = useState(240);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);

@@ -4,7 +4,7 @@ import { Shield, AlertTriangle, Check, Info, Clock, Eye } from 'lucide-react';
 const PasswordChecker = ({ password, analysis, darkMode }) => {
   if (!password || !analysis) {
     return (
-      <div className={`p-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+      <div className={`p-4 border-2 rounded-lg ${darkMode ? 'text-gray-400 border-dark-600' : 'text-gray-600 border-gray-300'}`}>
         Enter a password to check its strength
       </div>
     );
@@ -12,18 +12,18 @@ const PasswordChecker = ({ password, analysis, darkMode }) => {
 
   const { score, entropy, timeToBreak, suggestions } = analysis;
 
-  // Define strength labels and colors
+  // Define strength labels and colors (updated for outline style)
   const strengthLabels = ['Very Weak', 'Weak', 'Medium', 'Strong', 'Very Strong'];
   const strengthColors = [
-    darkMode ? 'text-red-400 bg-red-900/30' : 'text-red-600 bg-red-100',
-    darkMode ? 'text-orange-400 bg-orange-900/30' : 'text-orange-600 bg-orange-100',
-    darkMode ? 'text-yellow-400 bg-yellow-900/30' : 'text-yellow-600 bg-yellow-100',
-    darkMode ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-100',
-    darkMode ? 'text-green-400 bg-green-900/30' : 'text-green-600 bg-green-100'
+    darkMode ? 'text-red-400 border-red-700' : 'text-red-600 border-red-400',
+    darkMode ? 'text-orange-400 border-orange-700' : 'text-orange-600 border-orange-400',
+    darkMode ? 'text-yellow-400 border-yellow-700' : 'text-yellow-600 border-yellow-400',
+    darkMode ? 'text-blue-400 border-blue-700' : 'text-blue-600 border-blue-400',
+    darkMode ? 'text-green-400 border-green-700' : 'text-green-600 border-green-400'
   ];
 
   return (
-    <div>
+    <div className={`border-2 rounded-lg p-4 ${darkMode ? 'border-dark-600' : 'border-gray-300'}`}>
       {/* Strength summary */}
       <div className="flex justify-between items-center mb-4">
         <div>
@@ -45,7 +45,7 @@ const PasswordChecker = ({ password, analysis, darkMode }) => {
             </span>
           </div>
         </div>
-        <div className={`px-3 py-2 rounded-lg ${strengthColors[score]}`}>
+        <div className={`px-3 py-2 rounded-lg border-2 ${strengthColors[score]}`}>
           <span className="text-lg font-bold">{entropy.toFixed(1)}</span>
           <span className="text-sm ml-1">bits</span>
         </div>
@@ -67,8 +67,8 @@ const PasswordChecker = ({ password, analysis, darkMode }) => {
 
       {/* Details */}
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-        {/* Time to crack */}
-        <div className={`p-3 rounded-lg border ${darkMode ? 'bg-dark-700/50 border-dark-600' : 'bg-gray-50 border-gray-200'}`}>
+        {/* Time to crack - updated with border-2 for outlined style */}
+        <div className={`p-3 rounded-lg border-2 ${darkMode ? 'border-dark-600' : 'border-gray-300'}`}>
           <div className="flex items-start">
             <Clock size={16} className="mt-0.5 mr-2 flex-shrink-0" />
             <div>
@@ -88,8 +88,8 @@ const PasswordChecker = ({ password, analysis, darkMode }) => {
           </div>
         </div>
 
-        {/* Entropy */}
-        <div className={`p-3 rounded-lg border ${darkMode ? 'bg-dark-700/50 border-dark-600' : 'bg-gray-50 border-gray-200'}`}>
+        {/* Entropy - updated with border-2 for outlined style */}
+        <div className={`p-3 rounded-lg border-2 ${darkMode ? 'border-dark-600' : 'border-gray-300'}`}>
           <div className="flex items-start">
             <Shield size={16} className="mt-0.5 mr-2 flex-shrink-0" />
             <div>
@@ -105,9 +105,9 @@ const PasswordChecker = ({ password, analysis, darkMode }) => {
         </div>
       </div>
 
-      {/* Suggestions */}
+      {/* Suggestions - updated with border-2 for outlined style */}
       {suggestions && suggestions.length > 0 && (
-        <div className={`mt-4 p-3 rounded-lg border ${darkMode ? 'bg-dark-700/50 border-dark-600' : 'bg-gray-50 border-gray-200'}`}>
+        <div className={`mt-4 p-3 rounded-lg border-2 ${darkMode ? 'border-dark-600' : 'border-gray-300'}`}>
           <h4 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Suggestions</h4>
           <ul className="space-y-2">
             {suggestions.map((suggestion, index) => (

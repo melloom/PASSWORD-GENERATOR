@@ -1,0 +1,158 @@
+{
+  "app": {
+    "name": "Générateur de Mot de Passe Lockora",
+    "tagline": "Générez des mots de passe sécurisés facilement"
+  },
+  "common": {
+    "password": "Mot de passe",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "generate": "Générer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès"
+  },
+  "passwordGen": {
+    "yourPassword": "Votre mot de passe généré",
+    "length": "Longueur",
+    "uppercase": "Majuscules (A-Z)",
+    "lowercase": "Minuscules (a-z)",
+    "numbers": "Chiffres (0-9)",
+    "symbols": "Symboles (!@#$)",
+    "excludeSimilar": "Exclure les caractères similaires (i, l, 1, L, o, 0, O)",
+    "avoidAmbiguous": "Éviter les caractères ambigus",
+    "customExclude": "Exclusions personnalisées",
+    "advancedOptions": "Options Avancées",
+    "passwordExpiry": "Expiration du Mot de Passe",
+    "expiresIn": "Expire dans",
+    "minutes": "minutes",
+    "memorableOptions": "Options de Mot de Passe Mémorable",
+    "wordCount": "Nombre de mots",
+    "separator": "Séparateur de mots",
+    "wordCase": "Casse des mots",
+    "cases": {
+      "lowercase": "minuscules",
+      "uppercase": "MAJUSCULES",
+      "capitalized": "Première Lettre Majuscule",
+      "mixed": "MéLaNgé",
+      "camelCase": "camelCase"
+    },
+    "randomPassword": "Mot de Passe Aléatoire",
+    "memorablePassword": "Mot de Passe Mémorable",
+    "showSettings": "Afficher les Paramètres",
+    "hideSettings": "Masquer les Paramètres"
+  },
+  "passwordStrength": {
+    "passwordStrength": "Force du Mot de Passe",
+    "entropy": "Entropie",
+    "timeToCrack": "Temps de déchiffrement",
+    "charactersUsed": "Caractères utilisés",
+    "strengthLevel": {
+      "0": "Très Faible",
+      "1": "Faible",
+      "2": "Moyen",
+      "3": "Fort",
+      "4": "Très Fort"
+    },
+    "entropyLevel": {
+      "low": "Faible",
+      "medium": "Moyenne",
+      "high": "Élevée",
+      "veryHigh": "Très Élevée"
+    },
+    "suggestions": "Suggestions",
+    "checks": {
+      "length": "12+ caractères pour plus de sécurité",
+      "mixed": "Mélange de majuscules et minuscules",
+      "numbers": "Inclure des chiffres",
+      "symbols": "Inclure des symboles pour une sécurité maximale"
+    }
+  },
+  "passwordHistory": {
+    "title": "Historique des Mots de Passe",
+    "empty": "Pas encore d'historique de mots de passe",
+    "clearAll": "Effacer l'Historique",
+    "secureShred": "Destruction Sécurisée",
+    "analytics": {
+      "title": "Analyse des Mots de Passe",
+      "insights": "Analyses basées sur votre historique de mots de passe",
+      "notEnough": "Pas assez d'historique pour générer des analyses",
+      "generate": "Générez au moins 2 mots de passe pour voir les tendances et statistiques",
+      "basedOn": "Analyses basées sur vos {{count}} mots de passe les plus récents",
+      "avgStrength": "Force Moy.",
+      "avgLength": "Longueur Moy.",
+      "symbolUsage": "Utilisation de Symboles",
+      "totalPasswords": "Total Mots de Passe",
+      "strengthTrends": "Tendances de Force",
+      "types": "Types",
+      "characters": "Caractères",
+      "strongestPassword": "Mot de Passe le Plus Fort",
+      "weakestPassword": "Mot de Passe le Plus Faible"
+    },
+    "timestamp": "Généré",
+    "noHistory": "L'historique des mots de passe est stocké uniquement en mémoire temporaire et est automatiquement détruit lorsque vous fermez le navigateur."
+  },
+  "passwordChecker": {
+    "title": "Vérifier la Force du Mot de Passe",
+    "enterPassword": "Entrez un mot de passe pour vérifier sa force",
+    "checkButton": "Vérifier le Mot de Passe",
+    "resetButton": "Réinitialiser",
+    "suggestButton": "Suggérer un Mot de Passe Similaire",
+    "tryAnother": "Vérifier un autre mot de passe",
+    "generateNew": "Générer un Nouveau Mot de Passe"
+  },
+  "passwordLeakChecker": {
+    "title": "Vérificateur de Fuites de Mot de Passe",
+    "subtitle": "Vérifiez si votre mot de passe a été exposé lors de fuites de données",
+    "privacyNotice": "Votre mot de passe n'est jamais transmis à un serveur. Nous utilisons des techniques sécurisées de k-anonymat.",
+    "enterPassword": "Entrez un mot de passe pour vérifier les fuites",
+    "checkButton": "Vérifier",
+    "checking": "Vérification...",
+    "results": {
+      "notFound": "Bonnes nouvelles ! Mot de passe non trouvé dans les fuites.",
+      "found": "Mot de passe exposé dans des fuites de données !",
+      "foundIn": "Trouvé dans {{count}} sur {{total}} bases de données • Confiance : {{level}}",
+      "verified": "Vérifié dans {{count}} bases de données de fuites",
+      "riskLevel": "Niveau de Risque : Élevé",
+      "compromised": "Ce mot de passe a été exposé dans des fuites de données et doit être considéré comme compromis.",
+      "riskInfo": "Toute personne utilisant ce mot de passe est exposée à un risque significatif d'attaques d'identifiants.",
+      "actions": {
+        "title": "Actions Recommandées :",
+        "change": "Changez ce mot de passe immédiatement sur tous les sites où vous l'utilisez",
+        "noReuse": "Ne réutilisez jamais ce mot de passe - chaque compte doit avoir un mot de passe unique",
+        "manager": "Envisagez d'utiliser un gestionnaire de mots de passe pour créer et stocker des mots de passe forts",
+        "twoFactor": "Activez l'authentification à deux facteurs sur tous vos comptes importants",
+        "monitor": "Surveillez vos comptes pour détecter toute activité suspecte"
+      }
+    }
+  },
+  "secureShare": {
+    "title": "Partager le Mot de Passe",
+    "secureLink": "Lien Sécurisé Créé",
+    "secureLinkInfo": "Ce lien sécurisé expire dans 24 heures et ne peut être consulté qu'une seule fois.",
+    "copyLink": "Copier le Lien",
+    "showQR": "Afficher le Code QR",
+    "shareToApps": "Partager vers des Applications",
+    "copyBasicURL": "Copier l'URL Basique",
+    "sharedPassword": "Mot de Passe Partagé",
+    "securityWarning": "Avertissement de Sécurité",
+    "securityWarningText": "Ce lien contient des informations sensibles. Ne le partagez pas davantage, sauf si vous faites entièrement confiance au destinataire.",
+    "expiryNotice": "Ce lien sécurisé expire dans {{time}}",
+    "expiredNotice": "Ce lien sécurisé a expiré",
+    "infoTitle": "Comment fonctionne le partage sécurisé",
+    "infoBody": "Liens chiffrés de bout en bout qui expirent après 24 heures et ne peuvent être consultés qu'une seule fois."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "theme": "Thème",
+    "darkMode": "Mode Sombre",
+    "lightMode": "Mode Clair",
+    "language": "Langue",
+    "languageSelect": "Sélectionner la Langue"
+  }
+}

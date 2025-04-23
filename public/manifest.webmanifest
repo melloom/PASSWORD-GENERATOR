@@ -32,7 +32,7 @@
   "start_url": "./",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "theme_color": "#3b82f6",
   "background_color": "#ffffff",
   "prefer_related_applications": false,
@@ -42,7 +42,16 @@
   "shortcuts": [
     {
       "name": "Generate Password",
-      "url": "./"
+      "url": "./",
+      "description": "Create a new secure password"
     }
-  ]
+  ],
+  "display_override": ["standalone", "fullscreen", "minimal-ui", "browser"],
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
+  "handle_links": "preferred",
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }

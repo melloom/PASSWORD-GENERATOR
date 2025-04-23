@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, AlertTriangle, Copy, Check } from 'lucide-react';
+import { Eye, EyeOff, AlertTriangle, Copy, Check, ArrowLeft } from 'lucide-react';
 
 const PasswordViewer = ({ darkMode }) => {
   const [password, setPassword] = useState('');
@@ -11,11 +11,17 @@ const PasswordViewer = ({ darkMode }) => {
     try {
       const hash = window.location.hash.substring(1); // Get data after #
       const params = new URLSearchParams(hash);
+      
+      // Simplified handling without secure tokens
       const encodedPassword = params.get('data');
 
       if (encodedPassword) {
-        const decodedPassword = atob(encodedPassword); // Decode Base64
-        setPassword(decodedPassword);
+        try {
+          const decodedPassword = atob(encodedPassword); // Decode Base64
+          setPassword(decodedPassword);
+        } catch (e) {
+          setError('Invalid password format');
+        }
       } else {
         setError('No password data found in the link.');
       }
@@ -95,11 +101,17 @@ const PasswordViewer = ({ darkMode }) => {
             </button>
           </>
         )}
-         <p className="text-center text-xs mt-4">
-          <a href="/" className={`underline ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}>
+         <div className="mt-6">
+          <a 
+            href="/" 
+            className={`flex items-center justify-center py-3 px-4 rounded-lg transition-all ${
+              darkMode ? 'bg-dark-700 hover:bg-dark-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            }`}
+          >
+            <ArrowLeft size={18} className="mr-2" />
             Back to Password Generator
           </a>
-        </p>
+        </div>
       </div>
     </div>
   );

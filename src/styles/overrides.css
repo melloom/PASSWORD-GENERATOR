@@ -1,0 +1,398 @@
+/**
+ * Critical overrides that must take precedence over other styles
+ * This file is loaded last to ensure it overrides everything else
+ */
+
+/* Fix desktop PWA white bar issue */
+@media (display-mode: standalone) {
+  /* Base overrides for all modes */
+  body {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    border-top: 0 !important;
+  }
+  
+  /* Force hide status bar on desktop */
+  @media (min-width: 769px), (pointer: fine), (min-resolution: 1.5dppx) {
+    .pwa-status-bar-spacer,
+    [class*="status-bar"],
+    [id*="status-bar"] {
+      display: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      position: absolute !important;
+      top: -9999px !important;
+      left: -9999px !important;
+      clip: rect(0, 0, 0, 0) !important;
+      overflow: hidden !important;
+    }
+  }
+  
+  /* Only show on actual mobile devices */
+  @media (max-width: 768px) and (pointer: coarse) and (hover: none) {
+    .pwa-status-bar-spacer {
+      display: block !important;
+      height: env(safe-area-inset-top, 44px) !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+  }
+  
+  /* Security banner fixes - ensure it's clickable */
+  .security-banner {
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+  }
+}
+
+/* Ensure modals appear above everything */
+[data-testid="security-info"],
+.security-info-modal {
+  z-index: 9999 !important;
+}
+
+/* Enhanced password strength visualization styles and RTL support */
+
+/* Animated strength meter with improved visual feedback */
+.strength-meter {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.strength-meter::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-image: linear-gradient(90deg, #ef4444, #f59e0b, #3b82f6, #10b981);
+  border-radius: 4px;
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+
+.strength-meter.level-0::before {
+  transform: scaleX(0.1);
+}
+
+.strength-meter.level-1::before {
+  transform: scaleX(0.25);
+}
+
+.strength-meter.level-2::before {
+  transform: scaleX(0.5);
+}
+
+.strength-meter.level-3::before {
+  transform: scaleX(0.75);
+}
+
+.strength-meter.level-4::before {
+  transform: scaleX(1);
+}
+
+/* Add animated pulse for meter */
+.strength-meter::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Animated time-to-crack counter */
+.time-to-crack-counter {
+  display: inline-flex;
+  overflow: hidden;
+  position: relative;
+  height: 1.5rem;
+}
+
+.time-to-crack-counter span {
+  animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced character distribution visualization */
+.char-distribution-bar {
+  display: flex;
+  height: 24px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+  transition: all 0.3s ease;
+}
+
+.char-segment {
+  height: 100%;
+  position: relative;
+  transition: width 0.5s cubic-bezier(0.39, 0.575, 0.565, 1);
+}
+
+.char-segment-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .password-input {
+  padding-right: 1rem !important;
+  padding-left: 120px !important;
+}
+
+[dir="rtl"] .password-input-container button {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .mr-2 {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+[dir="rtl"] .ml-2 {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+[dir="rtl"] .strength-meter::before {
+  transform-origin: right;
+}
+
+/* Right-aligned menus for RTL */
+[dir="rtl"] .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .dropdown-menu-position-right {
+  right: auto;
+  left: 0;
+}
+
+/* Fix flex direction for RTL */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Fix icons alignment in RTL */
+[dir="rtl"] .icon-left-margin {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+[dir="rtl"] .icon-right-margin {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+/* Language switcher styles */
+.language-switcher {
+  position: relative;
+  z-index: 20;
+}
+
+.language-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0;
+  min-width: 150px;
+  margin-top: 0.25rem;
+  opacity: 0;
+  transform: translateY(-10px);
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.language-switcher:hover .language-options,
+.language-options:hover {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.language-option {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.language-option:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.language-option.active {
+  background-color: rgba(59, 130, 246, 0.1);
+  font-weight: 500;
+}
+
+.language-flag {
+  width: 20px;
+  height: 15px;
+  margin-right: 0.75rem;
+  object-fit: cover;
+}
+
+/* Animated strength indicators */
+.strength-indicator-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 0.5rem;
+}
+
+.strength-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #d1d5db;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.strength-dot.active {
+  transform: scale(1.2);
+}
+
+.strength-dot.level-1 {
+  background-color: #ef4444;
+}
+
+.strength-dot.level-2 {
+  background-color: #f59e0b;
+}
+
+.strength-dot.level-3 {
+  background-color: #3b82f6;
+}
+
+.strength-dot.level-4 {
+  background-color: #10b981;
+}
+
+/* RTL-specific adjustments for language selector */
+[dir="rtl"] .language-flag {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+[dir="rtl"] .language-options {
+  right: auto;
+  left: 0;
+}
+
+/* Dark mode adjustments */
+.dark .language-options {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+}
+
+.dark .language-option:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .language-option.active {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.dark .strength-tooltip {
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+/* Password history analytics chart adjustments */
+.password-history-chart {
+  height: 250px;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.chart-tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.dark .chart-tooltip {
+  background-color: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+/* Analytics tab styles */
+.analytics-tabs {
+  display: flex;
+  border-bottom: 1px solid;
+}
+
+.analytics-tab {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.analytics-tab.active {
+  border-bottom-color: #3b82f6;
+}
+
+.dark .analytics-tab.active {
+  border-bottom-color: #60a5fa;
+}
+
+/* Password history trends visualization */
+.password-trend-bar {
+  height: 6px;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.39, 0.575, 0.565, 1);
+}

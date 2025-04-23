@@ -1,0 +1,158 @@
+{
+  "app": {
+    "name": "Lockoraパスワード生成ツール",
+    "tagline": "安全なパスワードを簡単に生成"
+  },
+  "common": {
+    "password": "パスワード",
+    "copy": "コピー",
+    "copied": "コピーしました！",
+    "generate": "生成",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功"
+  },
+  "passwordGen": {
+    "yourPassword": "生成されたパスワード",
+    "length": "長さ",
+    "uppercase": "大文字 (A-Z)",
+    "lowercase": "小文字 (a-z)",
+    "numbers": "数字 (0-9)",
+    "symbols": "記号 (!@#$)",
+    "excludeSimilar": "似た文字を除外 (i, l, 1, L, o, 0, O)",
+    "avoidAmbiguous": "紛らわしい文字を避ける",
+    "customExclude": "カスタム除外",
+    "advancedOptions": "詳細設定",
+    "passwordExpiry": "パスワードの有効期限",
+    "expiresIn": "有効期限",
+    "minutes": "分",
+    "memorableOptions": "覚えやすいパスワードオプション",
+    "wordCount": "単語数",
+    "separator": "単語の区切り文字",
+    "wordCase": "単語の大文字小文字",
+    "cases": {
+      "lowercase": "小文字",
+      "uppercase": "大文字",
+      "capitalized": "先頭大文字",
+      "mixed": "混合",
+      "camelCase": "キャメルケース"
+    },
+    "randomPassword": "ランダムパスワード",
+    "memorablePassword": "覚えやすいパスワード",
+    "showSettings": "設定を表示",
+    "hideSettings": "設定を隠す"
+  },
+  "passwordStrength": {
+    "passwordStrength": "パスワード強度",
+    "entropy": "エントロピー",
+    "timeToCrack": "解読時間",
+    "charactersUsed": "使用文字",
+    "strengthLevel": {
+      "0": "非常に弱い",
+      "1": "弱い",
+      "2": "中程度",
+      "3": "強い",
+      "4": "非常に強い"
+    },
+    "entropyLevel": {
+      "low": "低い",
+      "medium": "中程度",
+      "high": "高い",
+      "veryHigh": "非常に高い"
+    },
+    "suggestions": "提案",
+    "checks": {
+      "length": "より安全にするには12文字以上",
+      "mixed": "大文字と小文字の混合",
+      "numbers": "数字を含める",
+      "symbols": "最大限の安全性のために記号を含める"
+    }
+  },
+  "passwordHistory": {
+    "title": "パスワード履歴",
+    "empty": "パスワード履歴はまだありません",
+    "clearAll": "履歴をクリア",
+    "secureShred": "安全に削除",
+    "analytics": {
+      "title": "パスワード分析",
+      "insights": "パスワード履歴に基づくインサイト",
+      "notEnough": "分析を生成するには履歴が不足しています",
+      "generate": "傾向と統計を見るには少なくとも2つのパスワードを生成してください",
+      "basedOn": "この分析は最近の{{count}}個のパスワードに基づいています",
+      "avgStrength": "平均強度",
+      "avgLength": "平均長",
+      "symbolUsage": "記号の使用",
+      "totalPasswords": "パスワード総数",
+      "strengthTrends": "強度の傾向",
+      "types": "タイプ",
+      "characters": "文字",
+      "strongestPassword": "最強のパスワード",
+      "weakestPassword": "最弱のパスワード"
+    },
+    "timestamp": "生成日時",
+    "noHistory": "パスワード履歴は一時的なメモリにのみ保存され、ブラウザを閉じると自動的に削除されます。"
+  },
+  "passwordChecker": {
+    "title": "パスワード強度チェック",
+    "enterPassword": "パスワードを入力して強度をチェック",
+    "checkButton": "パスワードをチェック",
+    "resetButton": "リセット",
+    "suggestButton": "類似パスワードを提案",
+    "tryAnother": "別のパスワードをチェック",
+    "generateNew": "新しいパスワードを生成"
+  },
+  "passwordLeakChecker": {
+    "title": "パスワード漏洩チェッカー",
+    "subtitle": "データ漏洩でパスワードが公開されていないかチェック",
+    "privacyNotice": "パスワードがサーバーに送信されることはありません。安全なk匿名性技術を使用しています。",
+    "enterPassword": "漏洩をチェックするパスワードを入力",
+    "checkButton": "チェック",
+    "checking": "チェック中...",
+    "results": {
+      "notFound": "良いニュースです！パスワードは漏洩データベースにありませんでした。",
+      "found": "パスワードがデータ漏洩で公開されています！",
+      "foundIn": "{{total}}中{{count}}のデータベースで発見されました • 信頼度：{{level}}",
+      "verified": "{{count}}の漏洩データベースで検証済み",
+      "riskLevel": "リスクレベル：高",
+      "compromised": "このパスワードはデータ漏洩で公開されており、侵害されたと考えるべきです。",
+      "riskInfo": "このパスワードを使用している人はクレデンシャルスタッフィング攻撃の重大なリスクにさらされています。",
+      "actions": {
+        "title": "推奨アクション：",
+        "change": "このパスワードを使用しているすべてのサイトですぐに変更してください",
+        "noReuse": "このパスワードを再利用しないでください - 各アカウントには固有のパスワードが必要です",
+        "manager": "強力なパスワードの作成と保存にパスワードマネージャーの使用を検討してください",
+        "twoFactor": "重要なアカウントすべてで二要素認証を有効にしてください",
+        "monitor": "不審なアクティビティがないかアカウントを監視してください"
+      }
+    }
+  },
+  "secureShare": {
+    "title": "パスワードを共有",
+    "secureLink": "安全なリンクが作成されました",
+    "secureLinkInfo": "この安全なリンクは24時間後に期限切れとなり、一度だけ閲覧できます。",
+    "copyLink": "リンクをコピー",
+    "showQR": "QRコードを表示",
+    "shareToApps": "アプリに共有",
+    "copyBasicURL": "基本URLをコピー",
+    "sharedPassword": "共有パスワード",
+    "securityWarning": "セキュリティ警告",
+    "securityWarningText": "このリンクには機密情報が含まれています。受信者を完全に信頼できない限り、さらに共有しないでください。",
+    "expiryNotice": "このセキュアリンクは{{time}}で期限切れになります",
+    "expiredNotice": "このセキュアリンクは期限切れです",
+    "infoTitle": "安全な共有の仕組み",
+    "infoBody": "エンドツーエンド暗号化されたリンクは24時間後に期限切れとなり、一度だけ閲覧できます。"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "darkMode": "ダークモード",
+    "lightMode": "ライトモード",
+    "language": "言語",
+    "languageSelect": "言語を選択"
+  }
+}

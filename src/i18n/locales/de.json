@@ -1,0 +1,158 @@
+{
+  "app": {
+    "name": "Lockora Passwort-Generator",
+    "tagline": "Erstellen Sie sichere Passwörter mit Leichtigkeit"
+  },
+  "common": {
+    "password": "Passwort",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "generate": "Generieren",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg"
+  },
+  "passwordGen": {
+    "yourPassword": "Ihr generiertes Passwort",
+    "length": "Länge",
+    "uppercase": "Großbuchstaben (A-Z)",
+    "lowercase": "Kleinbuchstaben (a-z)",
+    "numbers": "Zahlen (0-9)",
+    "symbols": "Symbole (!@#$)",
+    "excludeSimilar": "Ähnliche Zeichen ausschließen (i, l, 1, L, o, 0, O)",
+    "avoidAmbiguous": "Mehrdeutige Zeichen vermeiden",
+    "customExclude": "Benutzerdefinierte Ausschlüsse",
+    "advancedOptions": "Erweiterte Optionen",
+    "passwordExpiry": "Passwort-Ablauf",
+    "expiresIn": "Läuft ab in",
+    "minutes": "Minuten",
+    "memorableOptions": "Merkbare Passwort-Optionen",
+    "wordCount": "Anzahl der Wörter",
+    "separator": "Wort-Trennzeichen",
+    "wordCase": "Groß-/Kleinschreibung",
+    "cases": {
+      "lowercase": "kleinbuchstaben",
+      "uppercase": "GROSSBUCHSTABEN",
+      "capitalized": "Großgeschrieben",
+      "mixed": "GeMiScHt",
+      "camelCase": "camelCase"
+    },
+    "randomPassword": "Zufälliges Passwort",
+    "memorablePassword": "Merkbares Passwort",
+    "showSettings": "Einstellungen anzeigen",
+    "hideSettings": "Einstellungen ausblenden"
+  },
+  "passwordStrength": {
+    "passwordStrength": "Passwortstärke",
+    "entropy": "Entropie",
+    "timeToCrack": "Zeit zum Knacken",
+    "charactersUsed": "Verwendete Zeichen",
+    "strengthLevel": {
+      "0": "Sehr Schwach",
+      "1": "Schwach",
+      "2": "Mittel",
+      "3": "Stark",
+      "4": "Sehr Stark"
+    },
+    "entropyLevel": {
+      "low": "Niedrig",
+      "medium": "Mittel",
+      "high": "Hoch",
+      "veryHigh": "Sehr Hoch"
+    },
+    "suggestions": "Vorschläge",
+    "checks": {
+      "length": "12+ Zeichen für höhere Sicherheit",
+      "mixed": "Mischung aus Groß- und Kleinbuchstaben",
+      "numbers": "Zahlen einschließen",
+      "symbols": "Symbole für maximale Sicherheit einschließen"
+    }
+  },
+  "passwordHistory": {
+    "title": "Passwort-Verlauf",
+    "empty": "Noch kein Passwort-Verlauf",
+    "clearAll": "Verlauf löschen",
+    "secureShred": "Sicheres Löschen",
+    "analytics": {
+      "title": "Passwort-Analyse",
+      "insights": "Einblicke basierend auf Ihrem Passwort-Verlauf",
+      "notEnough": "Nicht genügend Passwort-Verlauf für Analyse",
+      "generate": "Generieren Sie mindestens 2 Passwörter, um Trends und Statistiken zu sehen",
+      "basedOn": "Analyse basiert auf Ihren {{count}} neuesten Passwörtern",
+      "avgStrength": "Durch. Stärke",
+      "avgLength": "Durch. Länge",
+      "symbolUsage": "Symbol-Verwendung",
+      "totalPasswords": "Passwörter Gesamt",
+      "strengthTrends": "Stärke-Trends",
+      "types": "Typen",
+      "characters": "Zeichen",
+      "strongestPassword": "Stärkstes Passwort",
+      "weakestPassword": "Schwächstes Passwort"
+    },
+    "timestamp": "Generiert",
+    "noHistory": "Der Passwort-Verlauf wird nur im temporären Speicher gespeichert und beim Schließen des Browsers automatisch gelöscht."
+  },
+  "passwordChecker": {
+    "title": "Passwort-Stärke prüfen",
+    "enterPassword": "Geben Sie ein Passwort ein, um dessen Stärke zu prüfen",
+    "checkButton": "Passwort prüfen",
+    "resetButton": "Zurücksetzen",
+    "suggestButton": "Ähnliches Passwort vorschlagen",
+    "tryAnother": "Anderes Passwort prüfen",
+    "generateNew": "Neues Passwort generieren"
+  },
+  "passwordLeakChecker": {
+    "title": "Passwort-Leak-Prüfer",
+    "subtitle": "Prüfen Sie, ob Ihr Passwort bei Datenlecks offengelegt wurde",
+    "privacyNotice": "Ihr Passwort wird niemals an einen Server übertragen. Wir verwenden sichere K-Anonymitätstechniken.",
+    "enterPassword": "Passwort eingeben, um nach Leaks zu suchen",
+    "checkButton": "Prüfen",
+    "checking": "Prüfen...",
+    "results": {
+      "notFound": "Gute Nachrichten! Passwort in keinem Datenleck gefunden.",
+      "found": "Passwort in Datenlecks gefunden!",
+      "foundIn": "Gefunden in {{count}} von {{total}} Datenbanken • Vertrauen: {{level}}",
+      "verified": "Überprüft in {{count}} Leak-Datenbanken",
+      "riskLevel": "Risikostufe: Hoch",
+      "compromised": "Dieses Passwort wurde bei Datenlecks offengelegt und sollte als kompromittiert betrachtet werden.",
+      "riskInfo": "Jeder, der dieses Passwort verwendet, ist einem erheblichen Risiko von Credential-Stuffing-Angriffen ausgesetzt.",
+      "actions": {
+        "title": "Empfohlene Maßnahmen:",
+        "change": "Ändern Sie dieses Passwort sofort auf allen Seiten, auf denen Sie es verwenden",
+        "noReuse": "Verwenden Sie dieses Passwort nie wieder - jedes Konto sollte ein eindeutiges Passwort haben",
+        "manager": "Erwägen Sie die Verwendung eines Passwort-Managers, um starke Passwörter zu erstellen und zu speichern",
+        "twoFactor": "Aktivieren Sie die Zwei-Faktor-Authentifizierung auf allen wichtigen Konten",
+        "monitor": "Überwachen Sie Ihre Konten auf verdächtige Aktivitäten"
+      }
+    }
+  },
+  "secureShare": {
+    "title": "Passwort teilen",
+    "secureLink": "Sicherer Link erstellt",
+    "secureLinkInfo": "Dieser sichere Link läuft in 24 Stunden ab und kann nur einmal angesehen werden.",
+    "copyLink": "Link kopieren",
+    "showQR": "QR-Code anzeigen",
+    "shareToApps": "An Apps teilen",
+    "copyBasicURL": "Einfache URL kopieren",
+    "sharedPassword": "Geteiltes Passwort",
+    "securityWarning": "Sicherheitswarnung",
+    "securityWarningText": "Dieser Link enthält vertrauliche Informationen. Teilen Sie ihn nicht weiter, es sei denn, Sie vertrauen dem Empfänger vollständig.",
+    "expiryNotice": "Dieser sichere Link läuft in {{time}} ab",
+    "expiredNotice": "Dieser sichere Link ist abgelaufen",
+    "infoTitle": "Wie sicheres Teilen funktioniert",
+    "infoBody": "Ende-zu-Ende-verschlüsselte Links, die nach 24 Stunden ablaufen und nur einmal angesehen werden können."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "theme": "Design",
+    "darkMode": "Dunkler Modus",
+    "lightMode": "Heller Modus",
+    "language": "Sprache",
+    "languageSelect": "Sprache auswählen"
+  }
+}

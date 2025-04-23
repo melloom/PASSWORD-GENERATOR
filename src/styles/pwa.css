@@ -1,0 +1,158 @@
+/**
+ * PWA-specific styles that adapt to desktop vs mobile
+ * Verified for proper status bar behavior on mobile
+ */
+
+/* Base PWA styles */
+@media (display-mode: standalone) {
+  /* Remove default body styling */
+  body {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    border-top: none !important;
+  }
+  
+  /* Force all spacers to be hidden by default */
+  .pwa-status-bar-spacer {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+  
+  /* Optimize for touch input */
+  button, a, input[type="checkbox"], select, .interactive {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* MOBILE PWA: Show status bar spacer ONLY on mobile - VERIFIED WORKING */
+  @media (max-width: 768px), (pointer: coarse) and (hover: none) {
+    /* Only override on actual mobile devices */
+    .pwa-status-bar-spacer {
+      display: block !important;
+      height: env(safe-area-inset-top, 44px) !important;
+      min-height: 44px !important;
+      width: 100% !important;
+      position: relative;
+      z-index: 9000 !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      /* Remove explicit background color - will be set dynamically */
+      background-color: inherit !important;
+    }
+
+    /* Dynamically set background color based on theme - IMPROVED SYNC */
+    body.dark-mode .pwa-status-bar-spacer,
+    .dark .pwa-status-bar-spacer,
+    .dark-theme .pwa-status-bar-spacer {
+      background-color: #0f172a !important; /* Dark mode background */
+    }
+    
+    body:not(.dark-mode):not(.dark) .pwa-status-bar-spacer,
+    :not(.dark-theme):not(.dark) .pwa-status-bar-spacer {
+      background-color: #e0f2fe !important; /* Match page background color */ 
+    }
+
+    /* Handle iOS status bar with improved styling */
+    @supports (padding-top: env(safe-area-inset-top)) {
+      header:before {
+        content: '';
+        height: env(safe-area-inset-top);
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: -1;
+      }
+    }
+
+    /* Extra media query for narrower screens (phones) */
+    @media (max-width: 480px) {
+      .pwa-status-bar-spacer {
+        display: block !important; /* Extra enforcement for phones */
+        height: env(safe-area-inset-top, 44px) !important;
+      }
+      
+      /* Make status bar background match header for continuity */
+      header {
+        position: relative;
+        z-index: 9001;
+      }
+    }
+  }
+
+  /* DESKTOP PWA: Ensure status bar spacer is hidden on desktop - VERIFIED WORKING */
+  @media (min-width: 769px), (pointer: fine) {
+    .pwa-status-bar-spacer {
+      display: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+      overflow: hidden !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    
+    header {
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+    }
+
+    /* Prevent any other elements from creating space */
+    body::before {
+      display: none !important;
+      height: 0 !important;
+    }
+  }
+
+  /* Enhanced header styling for PWA */
+  header {
+    min-height: 50px !important;
+    height: auto !important;
+  }
+
+  header button {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 8px !important;
+    margin: 2px !important;
+    position: relative !important;
+    z-index: 30 !important;
+  }
+
+  /* Improved tap targets */
+  header button svg {
+    pointer-events: none;
+  }
+
+  /* Make title more visible */
+  header h1 {
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+  }
+}
+
+/* Add PWA detection functionality */
+@media not (display-mode: standalone) {
+  .pwa-only {
+    display: none !important;
+  }
+}
+
+@media (display-mode: standalone) {
+  .browser-only {
+    display: none !important;
+  }
+
+  /* Fix security banner in PWA mode */
+  .security-banner {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    cursor: pointer;
+  }
+}

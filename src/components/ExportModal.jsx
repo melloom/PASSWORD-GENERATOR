@@ -43,7 +43,7 @@ const ExportModal = ({ isOpen, onClose, password, darkMode }) => {
 
     switch (format) {
       case 'txt':
-        content = generateTxtContent();
+        content = generateTxtContent(password);
         fileExtension = 'txt';
         mimeType = 'text/plain';
         break;
@@ -231,16 +231,12 @@ const ExportModal = ({ isOpen, onClose, password, darkMode }) => {
     setIsExporting(false);
   };
 
-  const generateTxtContent = () => {
-    const date = new Date().toLocaleString();
-    let content = '';
+  const generateTxtContent = (password) => {
+    // Simplified version - just the password with minimal additional info
+    return `Your Password:
+${password}
 
-    if (title) { content += `Title: ${title}\n`; }
-    if (description) { content += `Description: ${description}\n`; }
-    content += `Password: ${password}\n`;
-    content += `Generated: ${date}\n`;
-
-    return content;
+Generated with Lockora`;
   };
 
   const generateJsonContent = () => {

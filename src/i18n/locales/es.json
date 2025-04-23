@@ -1,0 +1,158 @@
+{
+  "app": {
+    "name": "Generador de Contraseñas Lockora",
+    "tagline": "Genera contraseñas seguras con facilidad"
+  },
+  "common": {
+    "password": "Contraseña",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "generate": "Generar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "passwordGen": {
+    "yourPassword": "Tu contraseña generada",
+    "length": "Longitud",
+    "uppercase": "Mayúsculas (A-Z)",
+    "lowercase": "Minúsculas (a-z)",
+    "numbers": "Números (0-9)",
+    "symbols": "Símbolos (!@#$)",
+    "excludeSimilar": "Excluir caracteres similares (i, l, 1, L, o, 0, O)",
+    "avoidAmbiguous": "Evitar caracteres ambiguos",
+    "customExclude": "Exclusiones personalizadas",
+    "advancedOptions": "Opciones Avanzadas",
+    "passwordExpiry": "Caducidad de Contraseña",
+    "expiresIn": "Caduca en",
+    "minutes": "minutos",
+    "memorableOptions": "Opciones de Contraseña Memorable",
+    "wordCount": "Número de palabras",
+    "separator": "Separador de palabras",
+    "wordCase": "Tipo de letra",
+    "cases": {
+      "lowercase": "minúsculas",
+      "uppercase": "MAYÚSCULAS",
+      "capitalized": "Capitalizada",
+      "mixed": "MeZcLaDa",
+      "camelCase": "camelCase"
+    },
+    "randomPassword": "Contraseña Aleatoria",
+    "memorablePassword": "Contraseña Memorable",
+    "showSettings": "Mostrar Configuración",
+    "hideSettings": "Ocultar Configuración"
+  },
+  "passwordStrength": {
+    "passwordStrength": "Fortaleza de Contraseña",
+    "entropy": "Entropía",
+    "timeToCrack": "Tiempo para descifrar",
+    "charactersUsed": "Caracteres utilizados",
+    "strengthLevel": {
+      "0": "Muy Débil",
+      "1": "Débil",
+      "2": "Media",
+      "3": "Fuerte",
+      "4": "Muy Fuerte"
+    },
+    "entropyLevel": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "veryHigh": "Muy Alta"
+    },
+    "suggestions": "Sugerencias",
+    "checks": {
+      "length": "12+ caracteres para mayor seguridad",
+      "mixed": "Mezcla de letras mayúsculas y minúsculas",
+      "numbers": "Incluye números",
+      "symbols": "Incluye símbolos para máxima seguridad"
+    }
+  },
+  "passwordHistory": {
+    "title": "Historial de Contraseñas",
+    "empty": "Aún no hay historial de contraseñas",
+    "clearAll": "Limpiar Historial",
+    "secureShred": "Borrado Seguro",
+    "analytics": {
+      "title": "Análisis de Contraseñas",
+      "insights": "Insights basados en tu historial de contraseñas",
+      "notEnough": "No hay suficiente historial de contraseñas para generar análisis",
+      "generate": "Genera al menos 2 contraseñas para ver tendencias y estadísticas",
+      "basedOn": "El análisis se basa en tus {{count}} contraseñas más recientes",
+      "avgStrength": "Fortaleza Prom.",
+      "avgLength": "Longitud Prom.",
+      "symbolUsage": "Uso de Símbolos",
+      "totalPasswords": "Total Contraseñas",
+      "strengthTrends": "Tendencias de Fortaleza",
+      "types": "Tipos",
+      "characters": "Caracteres",
+      "strongestPassword": "Contraseña más Fuerte",
+      "weakestPassword": "Contraseña más Débil"
+    },
+    "timestamp": "Generada",
+    "noHistory": "El historial de contraseñas se almacena solo en memoria temporal y se elimina automáticamente cuando cierras el navegador."
+  },
+  "passwordChecker": {
+    "title": "Comprobar Fortaleza de Contraseña",
+    "enterPassword": "Ingresa una contraseña para verificar su fortaleza",
+    "checkButton": "Comprobar Contraseña",
+    "resetButton": "Reiniciar",
+    "suggestButton": "Sugerir Contraseña Similar",
+    "tryAnother": "Comprobar otra contraseña",
+    "generateNew": "Generar Nueva Contraseña"
+  },
+  "passwordLeakChecker": {
+    "title": "Verificador de Filtraciones",
+    "subtitle": "Comprueba si tu contraseña ha sido expuesta en filtraciones de datos",
+    "privacyNotice": "Tu contraseña nunca se transmite a ningún servidor. Utilizamos técnicas seguras de k-anonimato.",
+    "enterPassword": "Ingresa contraseña para verificar filtraciones",
+    "checkButton": "Comprobar",
+    "checking": "Comprobando...",
+    "results": {
+      "notFound": "¡Buenas noticias! Contraseña no encontrada en filtraciones.",
+      "found": "¡Contraseña expuesta en filtraciones de datos!",
+      "foundIn": "Encontrada en {{count}} de {{total}} bases de datos • Confianza: {{level}}",
+      "verified": "Verificada en {{count}} bases de datos de filtraciones",
+      "riskLevel": "Nivel de Riesgo: Alto",
+      "compromised": "Esta contraseña ha sido expuesta en filtraciones de datos y debe considerarse comprometida.",
+      "riskInfo": "Cualquier persona que use esta contraseña está en riesgo significativo de ataques de credenciales.",
+      "actions": {
+        "title": "Acciones Recomendadas:",
+        "change": "Cambiar esta contraseña inmediatamente en todos los sitios donde la uses",
+        "noReuse": "Nunca reutilices esta contraseña - cada cuenta debe tener una contraseña única",
+        "manager": "Considera usar un gestor de contraseñas para crear y almacenar contraseñas seguras",
+        "twoFactor": "Habilita autenticación de dos factores en todas tus cuentas importantes",
+        "monitor": "Supervisa tus cuentas para detectar actividad sospechosa"
+      }
+    }
+  },
+  "secureShare": {
+    "title": "Compartir Contraseña",
+    "secureLink": "Enlace Seguro Creado",
+    "secureLinkInfo": "Este enlace seguro expira en 24 horas y solo se puede ver una vez.",
+    "copyLink": "Copiar Enlace",
+    "showQR": "Mostrar Código QR",
+    "shareToApps": "Compartir a Aplicaciones",
+    "copyBasicURL": "Copiar URL Básica",
+    "sharedPassword": "Contraseña Compartida",
+    "securityWarning": "Advertencia de Seguridad",
+    "securityWarningText": "Este enlace contiene información sensible. No lo compartas más a menos que confíes completamente en el destinatario.",
+    "expiryNotice": "Este enlace seguro expira en {{time}}",
+    "expiredNotice": "Este enlace seguro ha expirado",
+    "infoTitle": "Cómo funciona el compartir seguro",
+    "infoBody": "Enlaces cifrados de extremo a extremo que expiran después de 24 horas y solo se pueden ver una vez."
+  },
+  "settings": {
+    "title": "Configuración",
+    "theme": "Tema",
+    "darkMode": "Modo Oscuro",
+    "lightMode": "Modo Claro",
+    "language": "Idioma",
+    "languageSelect": "Seleccionar Idioma"
+  }
+}

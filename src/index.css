@@ -50,6 +50,12 @@
   }
 }
 
+/* Add these styles to ensure modal appears on top of everything else */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Animation classes */
 .animate-pulse {
   animation: pulse 2s infinite;
@@ -290,6 +296,7 @@ body {
   margin: 0;
   overflow-x: hidden;
   z-index: 50 !important;
+  isolation: isolate;
 }
 
 code {
@@ -546,4 +553,122 @@ code {
 /* Ensure proper box model */
 *, *::before, *::after {
   box-sizing: border-box;
+}
+
+/* Fix text wrap issues in dropdowns and menus on mobile */
+@media (max-width: 480px) {
+  .dropdown-menu,
+  .modal-content,
+  .secure-passwords-menu {
+    max-width: 90vw !important;
+    width: auto !important;
+    min-width: 250px !important;
+  }
+  
+  /* Ensure text in menus wraps properly */
+  .dropdown-menu p,
+  .modal-content p,
+  .secure-passwords-menu p {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+  }
+  
+  /* Ensure dropdown menus stay in view on small screens */
+  .dropdown-menu,
+  .secure-passwords-menu {
+    position: absolute;
+    right: 0;
+    left: auto !important;
+    transform: none !important;
+  }
+}
+
+/* Add this to ensure the share modal appears on top of all other elements */
+[role="dialog"],
+.fixed.inset-0.z-\[9999\] {
+  z-index: 9999 !important;
+}
+
+/* Ensure buttons in the modal are properly sized for touch */
+@media (max-width: 640px) {
+  .grid-cols-2 button, 
+  .grid-cols-3 button {
+    min-height: 80px;
+  }
+}
+
+/* Add these animations for the share modal */
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Ensure the share modal has the highest z-index possible */
+.share-modal-backdrop {
+  z-index: 99999 !important;
+  position: fixed;
+  inset: 0;
+}
+
+/* Fix modal rendering issues */
+.share-modal-content {
+  z-index: 100000 !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure proper stacking context for modal elements */
+body {
+  isolation: isolate;
+}
+
+/* Fix modal buttons on mobile */
+@media (max-width: 640px) {
+  .share-modal-content .grid-cols-2 button,
+  .share-modal-content .grid-cols-3 button {
+    min-height: 80px;
+    padding: 0.5rem;
+  }
+
+  .share-modal-content {
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 92% !important;
+  }
+}
+
+/* Fix z-index issues for modals and buttons */
+.share-modal-backdrop {
+  z-index: 99999 !important; /* Ensure this is the highest z-index */
+}
+
+.share-modal-backdrop button {
+  position: relative;
+  z-index: 100000; /* Make buttons clickable */
+}
+
+/* Ensure proper event propagation */
+.share-modal-backdrop * {
+  pointer-events: auto;
 }

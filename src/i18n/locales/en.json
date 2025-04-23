@@ -1,0 +1,158 @@
+{
+  "app": {
+    "name": "Lockora Password Generator",
+    "tagline": "Generate secure passwords with ease"
+  },
+  "common": {
+    "password": "Password",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "generate": "Generate",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "passwordGen": {
+    "yourPassword": "Your generated password",
+    "length": "Length",
+    "uppercase": "Uppercase (A-Z)",
+    "lowercase": "Lowercase (a-z)",
+    "numbers": "Numbers (0-9)",
+    "symbols": "Symbols (!@#$)",
+    "excludeSimilar": "Exclude similar characters (i, l, 1, L, o, 0, O)",
+    "avoidAmbiguous": "Avoid ambiguous characters",
+    "customExclude": "Custom exclusions",
+    "advancedOptions": "Advanced Options",
+    "passwordExpiry": "Password Expiry",
+    "expiresIn": "Expires in",
+    "minutes": "minutes",
+    "memorableOptions": "Memorable Password Options",
+    "wordCount": "Number of words",
+    "separator": "Word separator",
+    "wordCase": "Word case",
+    "cases": {
+      "lowercase": "lowercase",
+      "uppercase": "UPPERCASE",
+      "capitalized": "Capitalized",
+      "mixed": "MiXeD",
+      "camelCase": "camelCase"
+    },
+    "randomPassword": "Random Password",
+    "memorablePassword": "Memorable Password",
+    "showSettings": "Show Password Settings",
+    "hideSettings": "Hide Settings"
+  },
+  "passwordStrength": {
+    "passwordStrength": "Password Strength",
+    "entropy": "Entropy",
+    "timeToCrack": "Time to crack",
+    "charactersUsed": "Characters used",
+    "strengthLevel": {
+      "0": "Very Weak",
+      "1": "Weak",
+      "2": "Medium",
+      "3": "Strong",
+      "4": "Very Strong"
+    },
+    "entropyLevel": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "veryHigh": "Very High"
+    },
+    "suggestions": "Suggestions",
+    "checks": {
+      "length": "12+ characters for stronger security",
+      "mixed": "Mix of uppercase and lowercase letters",
+      "numbers": "Include numbers",
+      "symbols": "Include symbols for maximum strength"
+    }
+  },
+  "passwordHistory": {
+    "title": "Password History",
+    "empty": "No password history yet",
+    "clearAll": "Clear History",
+    "secureShred": "Secure Shred",
+    "analytics": {
+      "title": "Password Analytics",
+      "insights": "Insights based on your password history",
+      "notEnough": "Not enough password history to generate analytics",
+      "generate": "Generate at least 2 passwords to see trends and statistics",
+      "basedOn": "Analytics are based on your {{count}} most recent passwords",
+      "avgStrength": "Avg. Strength",
+      "avgLength": "Avg. Length",
+      "symbolUsage": "Symbol Usage",
+      "totalPasswords": "Total Passwords",
+      "strengthTrends": "Strength Trends",
+      "types": "Types",
+      "characters": "Characters",
+      "strongestPassword": "Strongest Password",
+      "weakestPassword": "Weakest Password"
+    },
+    "timestamp": "Generated",
+    "noHistory": "Password history is stored only in temporary memory and automatically shredded when you close the browser."
+  },
+  "passwordChecker": {
+    "title": "Check Password Strength",
+    "enterPassword": "Enter a password to check its strength",
+    "checkButton": "Check Password",
+    "resetButton": "Reset",
+    "suggestButton": "Suggest Similar Password",
+    "tryAnother": "Check another password",
+    "generateNew": "Generate New Password"
+  },
+  "passwordLeakChecker": {
+    "title": "Password Breach Checker",
+    "subtitle": "Check if your password has been exposed in data breaches",
+    "privacyNotice": "Your password is never transmitted to any server. We use secure k-anonymity techniques.",
+    "enterPassword": "Enter password to check for leaks",
+    "checkButton": "Check",
+    "checking": "Checking...",
+    "results": {
+      "notFound": "Good news! Password not found in any breaches.",
+      "found": "Password exposed in data breaches!",
+      "foundIn": "Found in {{count}} of {{total}} databases • Confidence: {{level}}",
+      "verified": "Verified across {{count}} breach databases",
+      "riskLevel": "Risk Level: High",
+      "compromised": "This password has been exposed in data breaches and should be considered compromised.",
+      "riskInfo": "Anyone using this password is at significant risk of credential stuffing attacks.",
+      "actions": {
+        "title": "Recommended Actions:",
+        "change": "Change this password immediately on all sites where you use it",
+        "noReuse": "Never reuse this password - each account should have a unique password",
+        "manager": "Consider using a password manager to create and store strong passwords",
+        "twoFactor": "Enable two-factor authentication on all your important accounts",
+        "monitor": "Monitor your accounts for suspicious activity"
+      }
+    }
+  },
+  "secureShare": {
+    "title": "Share Password",
+    "secureLink": "Secure Link Created",
+    "secureLinkInfo": "This secure link expires in 24 hours and can only be viewed once.",
+    "copyLink": "Copy Link",
+    "showQR": "Show QR Code",
+    "shareToApps": "Share to Apps",
+    "copyBasicURL": "Copy Basic Share URL",
+    "sharedPassword": "Shared Password",
+    "securityWarning": "Security Warning",
+    "securityWarningText": "This link contains sensitive information. Do not share it further unless you trust the recipient completely.",
+    "expiryNotice": "This secure link expires in {{time}}",
+    "expiredNotice": "This secure link has expired",
+    "infoTitle": "How secure sharing works",
+    "infoBody": "End-to-end encrypted links that expire after 24 hours and can only be viewed once."
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "language": "Language",
+    "languageSelect": "Select Language"
+  }
+}

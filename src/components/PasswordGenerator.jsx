@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Shield, RotateCw, Eye, EyeOff, Moon, Sun, Sliders, Clock, Download, X, Info, RefreshCw, Copy, Check, AlertTriangle, Lock, AlarmClock, FileText, ChevronDown, ChevronUp, ArrowUp, Sparkles, RefreshCcw, QrCode, Timer, Hash, FileType, Smile, Download as DownloadIcon, Trash2, ShieldCheck, HomeIcon, Code, Github, BrainCircuit, Star, Cpu, BookOpen, Coffee, Share2, MinusCircle, PlusCircle } from 'lucide-react';
+import { Shield, RotateCw, Eye, EyeOff, Moon, Sun, Sliders, Clock, Download, X, Info, RefreshCw, Copy, Check, AlertTriangle, Lock, AlarmClock, FileText, ChevronDown, ChevronUp, ArrowUp, Sparkles, RefreshCcw, QrCode, Timer, Hash, FileType, Smile, Download as DownloadIcon, Trash2, ShieldCheck, HomeIcon, Code, Github, BrainCircuit, Star, Cpu, BookOpen, Coffee, Share2, MinusCircle, PlusCircle, BarChart2 } from 'lucide-react';
 import CharacterOptions from './CharacterOptions';
 import PasswordStrength from './PasswordStrength';
 import PasswordHistory from './PasswordHistory';
@@ -12,8 +12,6 @@ import PasswordGuides from './PasswordGuides';
 import CreatorInfo from './CreatorInfo';
 import ShareButton from './ShareButton'; // Import ShareButton component
 import PasswordSettings from './PasswordSettings'; // Import PasswordSettings component
-import SecurePasswordsMenu from './SecurePasswordsMenu';
-import * as tokenService from '../utils/tokenService';
 // Add import for password utility functions
 import {
   initEntropyPool,
@@ -23,11 +21,70 @@ import {
   calculateStrength,
   calculateEntropy
 } from '../utils/passwordUtils';
+import SecurityBanner from './SecurityBanner';
+import PasswordLeakChecker from './PasswordLeakChecker';
+import { enforceSecureContext, secureMemoryClear } from '../utils/secureMemory';
+
+// Add a helper hook to detect device type
+const useDeviceDetect = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkDevice = () => {
+      const mobile = window.matchMedia('(max-width: 768px)').matches || 
+                    window.matchMedia('(pointer: coarse)').matches ||
+                    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+  
+  return { isMobile };
+};
 
 // Fix password history modal visibility issues and button sizing
 const PasswordGenerator = ({ darkMode, setDarkMode }) => {
   // Add ref for scrolling to top
   const topRef = useRef(null);
+  
+  // Use our device detection hook
+  const { isMobile } = useDeviceDetect();
+  
+  // Add state to track PWA mode
+  const [isPWA, setIsPWA] = useState(false);
+  
+  // Detect PWA mode on mount
+  useEffect(() => {
+    const checkPWA = () => {
+      const standalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone === true;
+      setIsPWA(standalone);
+      
+      // Log status bar info for debugging
+      if (standalone) {
+        console.log('PWA Mode detected:', {
+          isMobile,
+          standalone,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          userAgent: navigator.userAgent,
+          pointerType: window.matchMedia('(pointer: coarse)').matches ? 'coarse/touch' : 'fine/mouse'
+        });
+      }
+    };
+    
+    checkPWA();
+    
+    // Also check when visibility changes (app might be foregrounded)
+    document.addEventListener('visibilitychange', checkPWA);
+    
+    return () => document.removeEventListener('visibilitychange', checkPWA);
+  }, [isMobile]);
+  
   const [showPreviewBubble, setShowPreviewBubble] = useState(false); // New state for preview bubble
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 }); // Position for preview bubble
 
@@ -134,9 +191,11 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
   // Add state to track modal navigation
   const [previousModal, setPreviousModal] = useState(null);
 
-  // Add state for secure passwords menu
-  const [showSecurePasswords, setShowSecurePasswords] = useState(false);
+  // Add this state variable if it's missing but referenced elsewhere
   const [hasSecurePasswords, setHasSecurePasswords] = useState(false);
+
+  // Add state to track initial mount
+  const [isInitialMount, setIsInitialMount] = useState(true);
 
   // Fix for password history not showing up
   const handleHistoryClick = () => {
@@ -342,10 +401,11 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
         if (!showPassword) {
           setPassword(prev => {
             // Replace with zeros in UI before page is hidden
-            // (Note: the actual value will still be in memory until garbage collection)
             return prev.replace(/./g, '0');
           });
         }
+        setPassword(''); // Clear password completely
+        setPasswordToCheck(''); // Clear password checker input
       }
     };
 
@@ -356,34 +416,65 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
   }, [showPassword]);
 
   // Enhanced password generation with better error handling
-  const handleGeneratePassword = () => {
-    try {
-      // Generate password as before
-      let newPassword = '';
+const handleGeneratePassword = () => {
+  try {
+    // Force entropy pool refresh for better randomness on each generation
+    initEntropyPool();
+    
+    // Generate password as before
+    let newPassword = '';
 
-      if (passwordType === 'memorable') {
-        if (useWords) {
-          // Generate word-based memorable password
-          newPassword = generateMemorablePassword({
-            wordCount,
-            includeNumbers,
-            includeSpecial: includeSymbols,
-            separator: wordSeparator,
-            wordCase
-          });
-        } else {
-          // Generate character-based password but make it more memorable
-          newPassword = generatePassword({
-            length: Math.max(12, wordCount * 3), // Minimum 12 characters
-            includeUppercase: true,
-            includeLowercase: true,
-            includeNumbers,
-            includeSymbols,
-            avoidAmbiguous: true,
-            pattern: 'memorable' // This pattern creates more memorable character combinations
-          });
-        }
+    if (passwordType === 'memorable') {
+      if (useWords) {
+        // Generate word-based memorable password
+        newPassword = generateMemorablePassword({
+          wordCount,
+          includeNumbers,
+          includeSpecial: includeSymbols,
+          separator: wordSeparator,
+          wordCase
+        });
       } else {
+        // Generate character-based password but make it more memorable
+        newPassword = generatePassword({
+          length: Math.max(12, wordCount * 3), // Minimum 12 characters
+          includeUppercase: true,
+          includeLowercase: true,
+          includeNumbers,
+          includeSymbols,
+          avoidAmbiguous: true,
+          pattern: 'memorable' // This pattern creates more memorable character combinations
+        });
+      }
+    } else {
+      newPassword = generatePassword({
+        length,
+        includeUppercase,
+        includeLowercase,
+        includeNumbers,
+        includeSymbols,
+        avoidAmbiguous,
+        excludeSimilar,
+        customExclusions
+      });
+    }
+
+    // Verify password isn't all zeros (serious error case)
+    if (/^0+$/.test(newPassword) || newPassword === '00000000') {
+      console.error("Critical: Generated an all-zero password, using fallback");
+      // Emergency fallback
+      newPassword = `Secure-${Math.random().toString(36).substring(2, 8)}-${Date.now().toString(36)}`;
+    }
+
+    // Analyze the security of the password before setting it - with forced entropy refresh
+    const analysis = analyzePasswordSecurity(newPassword);
+
+    // Regenerate if the password is extremely weak (score 0)
+    if (analysis.score === 0 && passwordType === 'random') {
+      // Try up to 5 times to generate a stronger password
+      let attempts = 0;
+      while (analysis.score === 0 && attempts < 5) {
+        console.log("Regenerating weak password, attempt:", attempts + 1);
         newPassword = generatePassword({
           length,
           includeUppercase,
@@ -394,111 +485,83 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
           excludeSimilar,
           customExclusions
         });
+        analysis = analyzePasswordSecurity(newPassword);
+        attempts++;
       }
 
-      // Verify password isn't all zeros (serious error case)
-      if (/^0+$/.test(newPassword) || newPassword === '00000000') {
-        console.error("Critical: Generated an all-zero password, using fallback");
-        // Emergency fallback
-        newPassword = `Secure-${Math.random().toString(36).substring(2, 8)}-${Date.now().toString(36)}`;
+      // Last resort if still getting bad passwords
+      if (analysis.score === 0) {
+        newPassword = `Secure-${Math.random().toString(36).substring(2, 10)}-${Date.now().toString(36)}`;
+        analysis = analyzePasswordSecurity(newPassword);
       }
-
-      // Analyze the security of the password before setting it
-      const analysis = analyzePasswordSecurity(newPassword);
-
-      // Regenerate if the password is extremely weak (score 0)
-      if (analysis.score === 0 && passwordType === 'random') {
-        // Try up to 5 times to generate a stronger password
-        let attempts = 0;
-        while (analysis.score === 0 && attempts < 5) {
-          console.log("Regenerating weak password, attempt:", attempts + 1);
-          newPassword = generatePassword({
-            length,
-            includeUppercase,
-            includeLowercase,
-            includeNumbers,
-            includeSymbols,
-            avoidAmbiguous,
-            excludeSimilar,
-            customExclusions
-          });
-          analysis = analyzePasswordSecurity(newPassword);
-          attempts++;
-        }
-
-        // Last resort if still getting bad passwords
-        if (analysis.score === 0) {
-          newPassword = `Secure-${Math.random().toString(36).substring(2, 10)}-${Date.now().toString(36)}`;
-          analysis = analyzePasswordSecurity(newPassword);
-        }
-      }
-
-      // Apply desired output format
-      let formattedPassword = newPassword;
-      switch (outputFormat) {
-        case 'hex':
-          formattedPassword = Array.from(newPassword)
-            .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
-            .join('');
-          break;
-        case 'base64':
-          try {
-            formattedPassword = btoa(newPassword);
-          } catch (e) {
-            console.error("Base64 encoding failed, falling back to plain text");
-            formattedPassword = newPassword;
-          }
-          break;
-        case 'emoji':
-          try {
-            formattedPassword = Array.from(newPassword)
-              .map(char => {
-                const code = char.charCodeAt(0) % 128;
-                return String.fromCodePoint(0x1F600 + (code % 80));
-              })
-              .join('');
-          } catch (e) {
-            console.error("Emoji encoding failed, falling back to plain text");
-            formattedPassword = newPassword;
-          }
-          break;
-        default: // 'plain'
-          formattedPassword = newPassword;
-      }
-
-      // Immediate update without animation
-      setPassword(formattedPassword);
-      setSecurityAnalysis(analysis);
-
-      // Reset expiration timer when generating a new password
-      if (expirationEnabled) {
-        setExpirationRemaining(expirationTime * 60); // seconds
-        setIsExpired(false);
-      }
-
-      // Add to history
-      addPasswordToHistory(formattedPassword, passwordType);
-
-      // Trigger refresh animation
-      setAnimateRefresh(true);
-      setTimeout(() => setAnimateRefresh(false), 500);
-    } catch (error) {
-      console.error("Failed to generate password:", error);
-      // Provide a fallback password in case of emergency
-      const fallbackPassword = `Backup-${Date.now().toString(36)}!`;
-      setPassword(fallbackPassword);
-
-      // Show error notification
-      const notification = document.createElement('div');
-      notification.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-white bg-red-500 shadow-lg z-[9999] animate-fadeIn`;
-      notification.textContent = 'Error generating password, using backup password';
-      document.body.appendChild(notification);
-      setTimeout(() => {
-        notification.classList.add('animate-fadeOut');
-        setTimeout(() => document.body.removeChild(notification), 300);
-      }, 3000);
     }
-  };
+
+    // Apply desired output format
+    let formattedPassword = newPassword;
+    switch (outputFormat) {
+      case 'hex':
+        formattedPassword = Array.from(newPassword)
+          .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
+          .join('');
+        break;
+      case 'base64':
+        try {
+          formattedPassword = btoa(newPassword);
+        } catch (e) {
+          console.error("Base64 encoding failed, falling back to plain text");
+          formattedPassword = newPassword;
+        }
+        break;
+      case 'emoji':
+        try {
+          formattedPassword = Array.from(newPassword)
+            .map(char => {
+              const code = char.charCodeAt(0) % 128;
+              return String.fromCodePoint(0x1F600 + (code % 80));
+            })
+            .join('');
+        } catch (e) {
+          console.error("Emoji encoding failed, falling back to plain text");
+          formattedPassword = newPassword;
+        }
+        break;
+      default: // 'plain'
+        formattedPassword = newPassword;
+    }
+
+    // Immediate update without animation
+    setPassword(formattedPassword);
+    setSecurityAnalysis(analysis);
+
+    // Reset expiration timer when generating a new password
+    if (expirationEnabled) {
+      setExpirationRemaining(expirationTime * 60); // seconds
+      setIsExpired(false);
+    }
+
+    // Add to history
+    addPasswordToHistory(formattedPassword, passwordType);
+
+    // Trigger refresh animation
+    setAnimateRefresh(true);
+    setTimeout(() => setAnimateRefresh(false), 500);
+  } catch (error) {
+    console.error("Failed to generate password:", error);
+    // Provide a fallback password in case of emergency
+    const fallbackPassword = `Backup-${Date.now().toString(36)}!`;
+    setPassword(fallbackPassword);
+
+    // Show error notification
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-white bg-red-500 shadow-lg z-[9999] animate-fadeIn`;
+    notification.textContent = 'Error generating password, using backup password';
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.classList.add('animate-fadeOut');
+      setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+  }
+};
 
   // Helper function to add password to history
   const addPasswordToHistory = (pwd, type) => {
@@ -549,10 +612,14 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
 
   // Generate password on initial load and when settings change
   useEffect(() => {
+    // Skip the first automatic generation when settings change during initialization
+    if (isInitialMount) return;
+    
     if (passwordType === 'random') {
       handleGeneratePassword();
     }
   }, [
+    isInitialMount,
     passwordType,
     length,
     includeUppercase,
@@ -566,10 +633,13 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
 
   // Generate memorable password when settings change
   useEffect(() => {
+    // Skip the first automatic generation when settings change during initialization
+    if (isInitialMount) return;
+    
     if (passwordType === 'memorable') {
       handleGeneratePassword();
     }
-  }, [passwordType, wordCount, wordSeparator, includeNumbers, includeSymbols, wordCase, useWords]);
+  }, [isInitialMount, passwordType, wordCount, wordSeparator, includeNumbers, includeSymbols, wordCase, useWords]);
 
   // Calculate strength whenever password changes
   useEffect(() => {
@@ -608,12 +678,50 @@ const PasswordGenerator = ({ darkMode, setDarkMode }) => {
 
   // Save password to file - Updated to show modal instead
   const handleSavePassword = () => {
+    if (!password || password.trim() === '') {
+      // Show error notification
+      const notification = document.createElement('div');
+      notification.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-white bg-red-500 shadow-lg z-[9999] animate-fadeIn`;
+      notification.textContent = 'No password to export! Please generate one first.';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add('animate-fadeOut');
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+      
+      return;
+    }
     setShowExport(true);
+    toggleBodyScroll(true);
   };
 
   // Enhanced copy password function with properly centered notification
 const handleCopyPassword = () => {
   // Check if navigator.clipboard.writeText is available (secure method)
+  if (!password || password.trim() === '') {
+    // Show error notification
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-white bg-red-500 shadow-lg z-[9999] animate-fadeIn`;
+    notification.textContent = 'No password to copy! Please generate one first.';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.classList.add('animate-fadeOut');
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+    
+    return;
+  }
+
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(password).then(() => {
       setShowCopied(true);
@@ -704,62 +812,33 @@ const handleCopyPassword = () => {
   }
 };
 
-  // Add this function for password checking
-  const checkPassword = () => {
-    if (!passwordToCheck.trim()) return;
+// Add this function for password checking
+const checkPassword = () => {
+  if (!passwordToCheck.trim()) return;
+
+  try {
     const result = analyzePasswordSecurity(passwordToCheck);
     setCheckResult(result);
 
-    // Option to save checked password
-    const saveCheckedBtn = document.createElement('button');
-    saveCheckedBtn.className = `mt-4 px-4 py-2 rounded-lg text-white ${
-      darkMode ? 'bg-primary-600' : 'bg-primary-500'
-    } shadow-lg flex items-center justify-center`;
-    saveCheckedBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="mr-2" width="16" height="16" viewBox="0  0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 1 2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save to History`;
-
-    saveCheckedBtn.onclick = () => {
-      const timestamp = new Date().toLocaleTimeString();
-      const newHistoryItem = {
-        password: passwordToCheck,
-        timestamp,
-        type: 'checked',
-        length: passwordToCheck.length
-      };
-
-      setPasswordHistory(prev => {
-        const updated = [newHistoryItem, ...prev];
-        return updated.slice(0, 10);
-      });
-
-      // Notification
-      const notification = document.createElement('div');
-      notification.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-white ${
-        darkMode ? 'bg-success-600' : 'bg-success-500'
-      } shadow-lg z-50 animate-fadeIn`;
-      notification.textContent = '✓ Password saved to history!';
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        notification.classList.add('animate-fadeOut');
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 300);
-      }, 2000);
-
-      // Remove the save button after clicking
-      saveCheckedBtn.remove();
-    };
-
-    // Add save button to the results section
+    // Scroll to results after they've been rendered
     setTimeout(() => {
-      const resultsDiv = document.querySelector('[data-testid="check-results"]');
-      if (resultsDiv && !resultsDiv.querySelector('.save-checked-btn')) {
-        resultsDiv.appendChild(saveCheckedBtn);
+      if (checkResultsRef.current) {
+        checkResultsRef.current.scrollIntoView({ behavior: 'smooth' });
       }
     }, 100);
-  };
+  } catch (error) {
+    console.error("Error analyzing password:", error);
+    setCheckResult({
+      score: 0,
+      entropy: 0,
+      timeToBreak: 'Unknown',
+      weaknesses: ['Error analyzing password'],
+      suggestions: ['Please try again with a different password']
+    });
+  }
+};
 
-  // Enhanced function to suggest multiple similar but stronger passwords
+// Enhanced function to suggest multiple similar but stronger passwords
   const suggestSimilarPassword = () => {
     if (!passwordToCheck || passwordToCheck.trim() === '') return;
 
@@ -874,6 +953,11 @@ const handleCopyPassword = () => {
     setCheckResult(null);
     setShowSuggestions(false);
     setPasswordSuggestions([]);
+
+    // Clear memory securely
+    setTimeout(() => {
+      setPasswordToCheck(prev => prev.replace(/./g, '0'));
+    }, 50);
   };
 
   // Function to handle Enter key press
@@ -1011,17 +1095,29 @@ const handleCopyPassword = () => {
     toggleBodyScroll(false);
   };
 
-  // Modify the QR code handlers to handle back navigation properly
+  // Modified handleShowQR to check for a valid password first
 const handleShowQR = (source) => {
+  if (!password || password.trim() === '') {
+    // Show error notification
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-white bg-red-500 shadow-lg z-[9999] animate-fadeIn`;
+    notification.textContent = 'No password to share! Please generate one first.';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.classList.add('animate-fadeOut');
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+    
+    return;
+  }
   setShowQRCode(true);
   setPreviousModal(source || null);
   toggleBodyScroll(true);
-};
-
-const handleCloseQR = () => {
-  setShowQRCode(false);
-  setPreviousModal(null);
-  toggleBodyScroll(false);
 };
 
 // Fix the handleBackToShare function to use the globally exposed ShareButton state
@@ -1045,18 +1141,89 @@ const handleBackToShare = () => {
   // Check for secure passwords on load
   useEffect(() => {
     const checkSecurePasswords = () => {
-      const validTokens = tokenService.getValidTokens();
+      const validTokens = []; // Replace tokenService.getValidTokens() with an empty array
       setHasSecurePasswords(validTokens.length > 0);
     };
 
-    // Check immediately
     checkSecurePasswords();
 
-    // Set up periodic checking (every minute)
+    window.addEventListener('secureTokensChanged', checkSecurePasswords);
+
     const intervalId = setInterval(checkSecurePasswords, 60000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      window.removeEventListener('secureTokensChanged', checkSecurePasswords);
+      clearInterval(intervalId);
+    };
   }, []);
+
+  // Check secure context when component mounts
+  useEffect(() => {
+    enforceSecureContext();
+  }, []);
+
+  // Enhanced secure clearing of password data with fixes for memory limitations
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // User is navigating away from the page - clear sensitive data
+        secureMemoryClear(password);
+        secureMemoryClear(passwordToCheck);
+        secureMemoryClear(passwordHistory);
+        
+        // Set state to empty strings
+        setPassword('');
+        setPasswordToCheck('');
+        setPasswordHistory([]);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Clear sensitive data after 30 minutes of inactivity
+    const inactivityTimeout = setTimeout(() => {
+      secureMemoryClear(password);
+      secureMemoryClear(passwordToCheck);
+      setPassword('');
+      setPasswordToCheck('');
+    }, 30 * 60 * 1000);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearTimeout(inactivityTimeout);
+    };
+  }, [password, passwordToCheck, passwordHistory]);
+
+  // Add this useEffect to ensure a password is generated on initial load
+  useEffect(() => {
+    // Generate password only once when component initially mounts
+    if (isInitialMount) {
+      handleGeneratePassword();
+      // Mark initialization complete
+      setIsInitialMount(false);
+    }
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Find the useEffect hook that might be clearing the password
+  // and remove or modify the auto-clear functionality
+  // It might look something like this:
+  useEffect(() => {
+    // Remove any timer that clears the password
+    // Don't include code like this:
+    // const timer = setTimeout(() => {
+    //   setPassword('');
+    // }, 60000);
+    // 
+    // return () => clearTimeout(timer);
+  }, []);
+
+  // If there's a resetPassword or clearPassword function, ensure it's only called on user action
+  const resetPassword = () => {
+    // This should only be called when the user clicks a reset button
+    // not automatically
+    setPassword('');
+    setSecurityAnalysis(null);
+  };
 
   return (
     <div className={`flex flex-col min-h-screen ${
@@ -1067,27 +1234,43 @@ const handleBackToShare = () => {
       {/* Always visible top anchor for scrolling */}
       <div ref={topRef} className="absolute top-0"></div>
 
-      {/* Dedicated PWA Status Bar Spacer - FIXED */}
-      <div className={`pwa-status-bar-spacer ${darkMode ? 'bg-dark-900' : 'bg-blue-50'}`}></div>
+      {/* Dedicated PWA Status Bar Spacer with improved detection */}
+      <div 
+        className={`pwa-status-bar-spacer ${darkMode ? 'bg-dark-900' : 'bg-blue-50'}`} 
+        data-is-mobile={isMobile ? 'true' : 'false'}
+        data-is-pwa={isPWA ? 'true' : 'false'}
+      ></div>
 
-      {/* Enhanced Security Banner - NOW BELOW THE SPACER */}
-      <div className={`${darkMode ? 'bg-green-900/30 border-green-800/30' : 'bg-green-50 border-green-200'} border-b px-4 py-3 text-sm flex items-center justify-between ${showSecurityInfo ? '' : 'cursor-pointer hover:bg-green-800/20'}`}
-        onClick={() => !showSecurityInfo && setShowSecurityInfo(true)}>
-        <div className="flex items-center">
-          <ShieldCheck size={16} className={`mr-2 ${darkMode ? 'text-green-400' : 'text-green-600'}`} />
-          <span className={`font-medium ${darkMode ? 'text-green-400' : 'text-green-800'}`}>
-            Cryptographically Secure: All passwords use CSPRNG and are never stored on servers
-          </span>
+      {/* PWA and Device Mode Indicator - ONLY show for mobile, not desktop */}
+      {process.env.NODE_ENV !== 'production' && isPWA && isMobile && (
+        <div className={`px-3 py-1 text-xs ${darkMode ? 'bg-dark-700' : 'bg-gray-100'} text-center`}>
+          Mobile PWA - Status Bar Shown
         </div>
-        <button
-          className={`${darkMode ? 'text-green-400 hover:bg-green-800/30' : 'text-green-600 hover:bg-green-100'} rounded-md p-1`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowSecurityInfo(!showSecurityInfo);
-          }}>
-          {showSecurityInfo ? <X size={14} /> : <Info size={14} />}
-        </button>
-      </div>
+      )}
+
+      {/* PWA Indicators - For development and app version tracking */}
+      {isPWA && (
+        <>
+          {/* Mobile indicator - only visible in dev */}
+          {process.env.NODE_ENV !== 'production' && isMobile && (
+            <div className={`px-3 py-1 text-xs ${darkMode ? 'bg-dark-700' : 'bg-gray-100'} text-center`}>
+              Mobile PWA - Status Bar Shown
+            </div>
+          )}
+          
+          {/* Subtle desktop indicator - always visible in corner */}
+          {!isMobile && (
+            <div className={`fixed bottom-2 right-2 px-1.5 py-0.5 text-[10px] rounded-sm z-50 opacity-60 ${
+              darkMode ? 'bg-dark-700 text-gray-400' : 'bg-gray-100 text-gray-600'
+            }`}>
+              desktop
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Replace the security banner with our dedicated component */}
+      <SecurityBanner darkMode={darkMode} />
 
       {/* Ultra-compact header optimized for PWA mode */}
 <header className={`py-0.5 pt-safe ${darkMode ? 'bg-dark-800/80 border-dark-700' : 'bg-white border-slate-200 shadow-sm'} border-b backdrop-blur-md sticky top-0 z-10 transition-all duration-300 flex items-center`}>
@@ -1127,39 +1310,7 @@ const handleBackToShare = () => {
       {/* Right side buttons with larger size */}
       <div className="flex items-center ml-auto space-x-2">
         {/* Secure Passwords Button - Add this before other buttons */}
-        <div className="relative">
-          <button
-            onClick={() => setShowSecurePasswords(!showSecurePasswords)}
-            className={`p-2 rounded-full ${
-              darkMode ? 'bg-dark-700 hover:bg-dark-600' : 'bg-gray-200 hover:bg-gray-300'
-            } relative transition-all shadow-sm hover:shadow`}
-            title="Secure Passwords"
-          >
-            <Lock size={18} className={darkMode ? 'text-primary-300' : 'text-primary-600'} />
-
-            {/* Indicator badge for secure passwords */}
-            {hasSecurePasswords && (
-              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
-              </span>
-            )}
-          </button>
-
-          {/* Secure Passwords Dropdown */}
-          {showSecurePasswords && (
-            <div
-              className={`absolute right-0 mt-2 w-72 rounded-lg shadow-lg z-50 ${
-                darkMode ? 'bg-dark-800 border border-dark-700' : 'bg-white border border-gray-300'
-              }`}
-            >
-              <SecurePasswordsMenu
-                darkMode={darkMode}
-                onClose={() => setShowSecurePasswords(false)}
-              />
-            </div>
-          )}
-        </div>
+        {/* Secure passwords button removed */}
 
         {/* Password Guides Button */}
         <button
@@ -1255,7 +1406,7 @@ const handleBackToShare = () => {
       height: 22px !important;
     }
 
-    /* Make title more prominent */
+    /* Ensure title is prominent */
     header h1 {
       font-size: 1.35rem !important;
       line-height: 1.1 !important;
@@ -1296,8 +1447,8 @@ const handleBackToShare = () => {
                       <div className={`text-xs px-3 py-1.5 rounded-full font-medium ${
                         strengthScore === 4 ? 'bg-gradient-to-r from-success-600 to-success-500 text-white' :
                         strengthScore === 3 ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white' :
-                        strengthScore === 2 ? 'bg-gradient-to-r from-warning-500 to-warning-400 text-dark-800' :
-                        strengthScore === 1 ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' :
+                        strengthScore === 2 ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white' :
+                        strengthScore === 1 ? 'bg-gradient-to-r from-warning-600 to-warning-500 text-white' :
                         'bg-gradient-to-r from-danger-600 to-danger-500 text-white'
                       } shadow-sm animate-fadeIn`}>
                         {strengthLabels[strengthScore]}
@@ -1417,6 +1568,7 @@ const handleBackToShare = () => {
                                       ? 'bg-dark-600 hover:bg-dark-500 text-gray-200'
                                       : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300'
                                   }`}
+                                  includeNavigateButton={true} // Add this prop to enable the "Take Me There" button
                                 />
                               </>
                             )}
@@ -1498,6 +1650,7 @@ const handleBackToShare = () => {
                                       ? 'bg-dark-600 hover:bg-dark-500 text-gray-200'
                                       : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300'
                                   }`}
+                                  includeNavigateButton={true} // Add this prop to enable the "Take Me There" button
                                 />
                               </>
                             )}
@@ -1521,18 +1674,44 @@ const handleBackToShare = () => {
                   </div>
                 </div>
 
-                {/* Strength indicator bar */}
-                <div className={`mt-4 h-2 w-full ${darkMode ? 'bg-dark-700' : 'bg-gray-200'} rounded-full overflow-hidden shadow-inner`}>
-                  <div
-                    className={`h-full ${
-                      strengthScore === 0 ? 'bg-gradient-to-r from-danger-600 to-danger-500' :
-                      strengthScore === 1 ? 'bg-gradient-to-r from-orange-600 to-orange-500' :
-                      strengthScore === 2 ? 'bg-gradient-to-r from-warning-600 to-warning-500' :
-                      strengthScore === 3 ? 'bg-gradient-to-r from-primary-600 to-primary-500' :
-                      'bg-gradient-to-r from-success-600 to-success-500'
-                    } transition-all duration-500`}
-                    style={{ width: `${Math.min(100, (strengthScore + 1) * 20)}%` }}
-                  ></div>
+                {/* Improved Strength indicator bar with better visual feedback */}
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Password Strength
+                    </span>
+                    <span className={`text-xs font-medium ${
+                      strengthScore === 4 ? 'text-success-500' :
+                      strengthScore === 3 ? 'text-primary-500' :
+                      strengthScore === 2 ? 'text-blue-500' :
+                      strengthScore === 1 ? 'text-warning-500' :
+                                          'text-danger-500'
+                    }`}>
+                      {strengthLabels[strengthScore]}
+                    </span>
+                  </div>
+                  
+                  <div className={`h-2.5 w-full ${darkMode ? 'bg-dark-700' : 'bg-gray-200'} rounded-full overflow-hidden shadow-inner`}>
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        strengthScore === 4 ? 'bg-gradient-to-r from-success-600 to-success-500' :
+                        strengthScore === 3 ? 'bg-gradient-to-r from-primary-600 to-primary-500' :
+                        strengthScore === 2 ? 'bg-gradient-to-r from-blue-600 to-blue-500' :
+                        strengthScore === 1 ? 'bg-gradient-to-r from-warning-600 to-warning-500' :
+                                            'bg-gradient-to-r from-danger-600 to-danger-500'
+                      }`}
+                      style={{ width: `${Math.min(100, (strengthScore + 1) * 20)}%` }}
+                    ></div>
+                  </div>
+                  
+                  {/* Strength markers */}
+                  <div className="flex justify-between mt-1 px-0.5">
+                    <div className={`w-1 h-1 rounded-full ${strengthScore >= 0 ? 'bg-danger-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-1 h-1 rounded-full ${strengthScore >= 1 ? 'bg-warning-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-1 h-1 rounded-full ${strengthScore >= 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-1 h-1 rounded-full ${strengthScore >= 3 ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-1 h-1 rounded-full ${strengthScore >= 4 ? 'bg-success-500' : 'bg-gray-300'}`}></div>
+                  </div>
                 </div>
 
                 {/* Security info row - only show when expanded */}
@@ -1552,19 +1731,22 @@ const handleBackToShare = () => {
                         </span>
                       </div>
 
-                      {securityAnalysis && (
+                      {/* Only show time to crack when there's an actual password */}
+                      {securityAnalysis && password && password.trim() !== '' && (
                         <div className={`flex items-center ${darkMode ? 'text-gray-400' : 'text-gray-800 font-medium'} mb-2 sm:mb-0`}>
                           <AlarmClock size={14} className={`mr-1 ${darkMode ? '' : 'text-gray-800'}`} />
                           <span className="mr-1">Time to crack:</span>
                           <span className={`px-1.5 py-0.5 rounded ${
-                            securityAnalysis.timeToBreak.includes('Centur') || securityAnalysis.timeToBreak.includes('year')
-                            ? (darkMode ? 'text-success-500' : 'bg-success-100 text-success-700 font-bold') :
-                            securityAnalysis.timeToBreak.includes('day')
-                            ? (darkMode ? 'text-primary-500' : 'bg-primary-100 text-primary-700 font-bold') :
-                            securityAnalysis.timeToBreak.includes('hour')
-                            ? (darkMode ? 'text-warning-500' : 'bg-warning-100 text-warning-700 font-bold') :
-                            (darkMode ? 'text-danger-500' : 'bg-danger-100 text-danger-700 font-bold')
-                          }`}>
+                            securityAnalysis.crackDifficulty === 'unbreakable' || securityAnalysis.crackDifficulty === 'very-strong'
+                              ? (darkMode ? 'text-success-500 bg-success-900/30' : 'bg-success-100 text-success-700 font-bold') :
+                            securityAnalysis.crackDifficulty === 'strong' 
+                              ? (darkMode ? 'text-primary-500 bg-primary-900/30' : 'bg-primary-100 text-primary-700 font-bold') :
+                            securityAnalysis.crackDifficulty === 'medium'
+                              ? (darkMode ? 'text-blue-500 bg-blue-900/30' : 'bg-blue-100 text-blue-700 font-bold') :
+                            securityAnalysis.crackDifficulty === 'weak'
+                              ? (darkMode ? 'text-warning-500 bg-warning-900/30' : 'bg-warning-100 text-warning-700 font-bold') :
+                              (darkMode ? 'text-danger-500 bg-danger-900/30' : 'bg-danger-100 text-danger-700 font-bold')
+                          }`} title="Based on dedicated password cracking hardware">
                             {securityAnalysis.timeToBreak}
                           </span>
                         </div>
@@ -1592,8 +1774,8 @@ const handleBackToShare = () => {
                 {/* Security check details */}
                 {showSecurityDetails && securityAnalysis && !isPasswordCollapsed && (
                   <div className={`mt-3 p-3 rounded-lg ${
-                    darkMode ? 'bg-dark-700/50 border border-dark-600' : 'bg-gray-50 border border-gray-200'
-                  } animate-fadeIn`}>
+                    darkMode ? 'bg-dark-700 border border-dark-600' : 'bg-gray-50 border border-gray-200'
+                  }`}>
                     <SecurityCheck analysis={securityAnalysis} darkMode={darkMode} />
                   </div>
                 )}
@@ -1748,7 +1930,7 @@ const handleBackToShare = () => {
               Check Password Strength
             </h3>
 
-            {/* Input and button - Added Reset button */}
+            {/* Input and button - Added outline styling */}
             <div className="flex flex-col space-y-4">
               <div className="flex w-full">
                 <input
@@ -1767,8 +1949,8 @@ const handleBackToShare = () => {
                   onClick={resetPasswordChecker}
                   className={`px-3 ${
                     darkMode
-                      ? 'bg-dark-600 hover:bg-dark-500 text-gray-300 border-t-2 border-r-2 border-b-2 border-dark-600'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-t-2 border-r-2 border-b-2 border-gray-300'
+                      ? 'bg-dark-600 hover:bg-dark-500 text-gray-300 border-2 border-l-0 border-dark-600'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-2 border-l-0 border-gray-300'
                   } rounded-r-lg transition-all flex items-center justify-center`}
                   title="Reset"
                 >
@@ -1777,32 +1959,20 @@ const handleBackToShare = () => {
               </div>
 
               <button
-                onClick={() => {
-                  if (passwordToCheck.trim()) {
-                    const result = analyzePasswordSecurity(passwordToCheck);
-                    setCheckResult(result);
-
-                    // Scroll to results
-                    setTimeout(() => {
-                      if (checkResultsRef.current) {
-                        checkResultsRef.current.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }, 100);
-                  }
-                }}
-                className="check-password-btn w-full px-4 py-3 flex justify-center items-center bg-primary-500 hover:bg-primary-600 border border-primary-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition"
+                onClick={checkPassword}
+                className="check-password-btn w-full px-4 py-3 flex justify-center items-center bg-primary-500 hover:bg-primary-600 border-2 border-primary-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition"
               >
                 <Shield size={16} className="mr-2" />
                 Check Password
               </button>
             </div>
 
-            {/* Check results */}
+            {/* Check results - update with border-2 for outlined style */}
             {checkResult && (
               <div
                 ref={checkResultsRef}
                 className={`mt-6 p-4 rounded-lg animate-fadeIn ${
-                  darkMode ? 'bg-dark-700 border border-dark-600' : 'bg-gray-50 border-2 border-gray-300'
+                  darkMode ? 'bg-dark-700 border-2 border-dark-600' : 'bg-gray-50 border-2 border-gray-300'
                 }`}
                 data-testid="check-results"
               >
@@ -1918,6 +2088,10 @@ const handleBackToShare = () => {
                 </div>
               </div>
             )}
+            {/* New password leak checker section - add separation */}
+            <div className="mt-12 pt-6 border-t dark:border-gray-700">
+              <PasswordLeakChecker darkMode={darkMode} />
+            </div>
           </div>
         </div>
       </main>
@@ -2010,6 +2184,17 @@ const handleBackToShare = () => {
         darkMode={darkMode}
         previousModal={previousModal}
         onBackToShare={handleBackToShare}
+        // Add capture options to ensure the full QR code is downloaded
+        captureOptions={{
+          width: 500,
+          height: 500,
+          quality: 1,
+          scale: 2,
+          style: {
+            background: darkMode ? '#1e293b' : '#ffffff',
+            padding: '20px'
+          }
+        }}
       />
 
       {/* Enhanced iOS Installation Instructions Modal */}
