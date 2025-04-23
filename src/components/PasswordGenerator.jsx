@@ -1234,41 +1234,6 @@ const handleBackToShare = () => {
       {/* Always visible top anchor for scrolling */}
       <div ref={topRef} className="absolute top-0"></div>
 
-      {/* Dedicated PWA Status Bar Spacer with improved detection */}
-      <div 
-        className={`pwa-status-bar-spacer ${darkMode ? 'bg-dark-900' : 'bg-blue-50'}`} 
-        data-is-mobile={isMobile ? 'true' : 'false'}
-        data-is-pwa={isPWA ? 'true' : 'false'}
-      ></div>
-
-      {/* PWA and Device Mode Indicator - ONLY show for mobile, not desktop */}
-      {process.env.NODE_ENV !== 'production' && isPWA && isMobile && (
-        <div className={`px-3 py-1 text-xs ${darkMode ? 'bg-dark-700' : 'bg-gray-100'} text-center`}>
-          Mobile PWA - Status Bar Shown
-        </div>
-      )}
-
-      {/* PWA Indicators - For development and app version tracking */}
-      {isPWA && (
-        <>
-          {/* Mobile indicator - only visible in dev */}
-          {process.env.NODE_ENV !== 'production' && isMobile && (
-            <div className={`px-3 py-1 text-xs ${darkMode ? 'bg-dark-700' : 'bg-gray-100'} text-center`}>
-              Mobile PWA - Status Bar Shown
-            </div>
-          )}
-          
-          {/* Subtle desktop indicator - always visible in corner */}
-          {!isMobile && (
-            <div className={`fixed bottom-2 right-2 px-1.5 py-0.5 text-[10px] rounded-sm z-50 opacity-60 ${
-              darkMode ? 'bg-dark-700 text-gray-400' : 'bg-gray-100 text-gray-600'
-            }`}>
-              desktop
-            </div>
-          )}
-        </>
-      )}
-
       {/* Replace the security banner with our dedicated component */}
       <SecurityBanner darkMode={darkMode} />
 

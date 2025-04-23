@@ -8,7 +8,7 @@
   position: relative;
 }
 
-/* Status Bar Spacer - Critical Fix for Notched Devices */
+/* PWA Status Bar styles */
 .pwa-status-bar-spacer {
   display: none;
   height: 0;
@@ -128,6 +128,23 @@
       right: 0;
     }
     
+    /* Add subtle indicator for PWA mode status */
+    .pwa-mobile-status-bar::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    body.dark-mode .pwa-mobile-status-bar::after {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
     /* Ensure the app content doesn't hide behind the status bar */
     header.sticky-header {
       top: env(safe-area-inset-top, 44px) !important;
@@ -136,6 +153,22 @@
     /* Account for status bar in main content area */
     main {
       padding-top: env(safe-area-inset-top, 44px);
+    }
+
+    /* Security Banner styling in PWA mode */
+    .security-banner-pwa {
+      margin-top: env(safe-area-inset-top, 44px) !important;
+      position: relative;
+      z-index: 990;
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Add transition for smooth visual experience */
+    .security-banner-pwa,
+    .pwa-mobile-status-bar,
+    header.sticky-header {
+      transition: background-color 0.3s ease, margin-top 0.3s ease, padding 0.3s ease;
     }
   }
 
@@ -258,6 +291,24 @@
     body {
       padding-top: env(safe-area-inset-top, 0);
     }
+
+    /* Remove extra body padding to avoid double spacing */
+    body {
+      padding-top: 0 !important;
+    }
+    
+    /* Prevent content from being pushed under status bar */
+    .security-banner-container {
+      padding-top: env(safe-area-inset-top, 0);
+      z-index: 1000;
+    }
+    
+    /* Better visual appearance for iOS devices */
+    .security-banner {
+      font-weight: 500;
+      padding-top: 0.65rem;
+      padding-bottom: 0.65rem;
+    }
   }
 }
 
@@ -287,5 +338,19 @@ header {
     visibility: visible !important;
     opacity: 1 !important;
     cursor: pointer;
+  }
+}
+
+/* Add dark mode specific styles for PWA status bar */
+@media (display-mode: standalone) and (prefers-color-scheme: dark) {
+  .pwa-mobile-status-bar {
+    background-color: #0f172a !important;
+  }
+}
+
+/* Light mode specific styles for PWA status bar */
+@media (display-mode: standalone) and (prefers-color-scheme: light) {
+  .pwa-mobile-status-bar {
+    background-color: #f8fafc !important;
   }
 }
