@@ -1,5 +1,5 @@
 // This is the service worker for the Secure Password Generator app
-const CACHE_NAME = 'secure-password-generator-v1.0.0';
+const CACHE_NAME = 'secure-password-generator-v1.0.1'; // Increment version
 
 // Assets to cache on install
 const urlsToCache = [
@@ -9,60 +9,115 @@ const urlsToCache = [
   '/favicon.ico',
   '/logo192.png',
   '/logo512.png',
-  '/maskable_icon.png'
+  '/maskable_icon.png',
+  // Add additional critical assets to ensure they're cached
+  '/styles.css'
 ];
 
 // Install event - cache essential files
 self.addEventListener('install', event => {
+  console.log('[ServiceWorker] Install');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Service Worker: Caching files');
+        console.log('[ServiceWorker] Caching files');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
+      .then(() => {
+        console.log('[ServiceWorker] Skip waiting on install');
+        return self.skipWaiting();
+      })
+      .catch(error => {
+        console.error('[ServiceWorker] Cache install error:', error);
+      })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Activate');
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Service Worker: Clearing old cache');
+            console.log('[ServiceWorker] Clearing old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
+    .then(() => {
+      console.log('[ServiceWorker] Claiming clients');
+      return self.clients.claim();
+    })
+    .catch(error => {
+      console.error('[ServiceWorker] Activation error:', error);
+    })
   );
 });
 
-// Fetch event - network first, then cache
+// Fetch event - improved caching strategy: stale-while-revalidate
 self.addEventListener('fetch', event => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
+  // Skip third-party API requests
+  if (event.request.url.includes('api.pwnedpasswords.com')) {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // If response is valid, clone it and store in cache
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME)
-          .then(cache => {
-            // Only cache same-origin requests to avoid CORS issues
-            if (event.request.url.startsWith(self.location.origin)) {
-              cache.put(event.request, responseClone);
-            }
-          });
-        return response;
-      })
-      .catch(() => {
-        // If network fails, serve from cache
-        console.log('Service Worker: Serving from cache');
-        return caches.match(event.request)
+    caches.match(event.request)
+      .then(cachedResponse => {
+        // Return cached response if found
+        if (cachedResponse) {
+          // Fetch an updated version in the background
+          const fetchPromise = fetch(event.request)
+            .then(response => {
+              // If the response is valid, store it in the cache
+              if (response && response.status === 200 && response.type === 'basic') {
+                const responseToCache = response.clone();
+                caches.open(CACHE_NAME)
+                  .then(cache => {
+                    cache.put(event.request, responseToCache);
+                    console.log('[ServiceWorker] Updated cache for:', event.request.url);
+                  });
+              }
+              return response;
+            })
+            .catch(err => {
+              console.log('[ServiceWorker] Fetch failed; returning cached response instead.', err);
+            });
+
+          return cachedResponse;
+        }
+
+        // If not in cache, fetch from network and cache the response
+        return fetch(event.request)
           .then(response => {
-            return response || caches.match('/index.html');
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          })
+          .catch(error => {
+            // For HTML requests, return the offline page
+            if (event.request.headers.get('accept').includes('text/html')) {
+              return caches.match('/index.html');
+            }
+            console.error('[ServiceWorker] Fetch error:', error);
+            throw error;
           });
       })
   );
@@ -71,34 +126,81 @@ self.addEventListener('fetch', event => {
 // Message event - handle version updates
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[ServiceWorker] Skip waiting triggered by client');
     self.skipWaiting();
+  }
+  
+  // Add support for checking version
+  if (event.data && event.data.type === 'CHECK_VERSION') {
+    const currentVersion = CACHE_NAME;
+    event.ports[0].postMessage({ version: currentVersion });
   }
 });
 
-// Push notification event handler
+// Push notification event handler with better error handling
 self.addEventListener('push', function(event) {
-  const data = event.data.json();
+  console.log('[ServiceWorker] Push received');
+  
+  let notificationData;
+  
+  try {
+    notificationData = event.data.json();
+  } catch (e) {
+    console.error('[ServiceWorker] Error parsing notification data:', e);
+    notificationData = {
+      title: 'Password Generator Notification',
+      body: 'New notification received'
+    };
+  }
 
   const options = {
-    body: data.body || 'New notification from Password Generator',
+    body: notificationData.body || 'New notification from Password Generator',
     icon: '/logo192.png',
     badge: '/favicon.ico',
     vibrate: [100, 50, 100],
     data: {
-      url: data.url || '/'
-    }
+      url: notificationData.url || '/'
+    },
+    tag: notificationData.tag || 'default', // Add tag for notification grouping
+    renotify: notificationData.renotify || false // Whether to notify users if a notification with same tag exists
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Password Generator', options)
+    // Try/catch to prevent crashes from notification errors
+    self.registration.showNotification(notificationData.title || 'Password Generator', options)
+      .catch(err => console.error('[ServiceWorker] Notification display error:', err))
   );
 });
 
-// Handle notification clicks
+// Handle notification clicks with error handling
 self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
+  console.log('[ServiceWorker] Notification click');
+  
+  try {
+    event.notification.close();
 
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url)
-  );
+    // Check if URL exists to avoid errors
+    const url = event.notification.data && event.notification.data.url ? 
+      event.notification.data.url : '/';
+      
+    event.waitUntil(
+      clients.matchAll({type: 'window'})
+        .then(function(clientList) {
+          // If we have a client, focus it
+          for (let i = 0; i < clientList.length; i++) {
+            const client = clientList[i];
+            if (client.url === url && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          // Otherwise open a new window
+          if (clients.openWindow) {
+            return clients.openWindow(url);
+          }
+        })
+        .catch(err => console.error('[ServiceWorker] Error handling notification click:', err))
+    );
+  } catch (err) {
+    console.error('[ServiceWorker] General error handling notification click:', err);
+  }
 });

@@ -978,6 +978,7 @@
 
       // Remove loader when app is ready
       document.addEventListener('DOMContentLoaded', function() {
+        // Primary timeout - try to remove loader after 1 second
         setTimeout(() => {
           const loader = document.getElementById('enhanced-loader');
           if (loader) {
@@ -997,35 +998,63 @@
             loader.parentNode.removeChild(loader);
           }
         }, 5000);
+        
+        // CRITICAL FAILSAFE - Force remove loader after 10 seconds no matter what
+        setTimeout(() => {
+          const loader = document.getElementById('enhanced-loader');
+          if (loader) {
+            console.warn('Forcing loader removal after 10s - this indicates a potential issue with app initialization');
+            loader.style.display = 'none';
+            if (loader.parentNode) {
+              loader.parentNode.removeChild(loader);
+            }
+            
+            // Also check for any other loading elements that might be stuck
+            const possibleLoaders = [
+              'loading-screen', 
+              'loading-spinner', 
+              'loading-overlay',
+              'fallback-content'
+            ];
+            
+            possibleLoaders.forEach(id => {
+              const element = document.getElementById(id);
+              if (element) {
+                element.style.display = 'none';
+                if (element.parentNode) {
+                  element.parentNode.removeChild(element);
+                }
+              }
+            });
+            
+            // Check if the app content is visible, if not show a recovery message
+            const appContent = document.querySelector('#root > *:not(#fallback-content):not(#enhanced-loader)');
+            if (!appContent) {
+              const root = document.getElementById('root');
+              if (root) {
+                root.innerHTML += `
+                  <div style="max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; 
+                               background-color: ${window.matchMedia('(prefers-color-scheme: dark)').matches ? '#1e293b' : '#ffffff'}; 
+                               color: ${window.matchMedia('(prefers-color-scheme: dark)').matches ? '#e2e8f0' : '#374151'}; 
+                               border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <h2>We're having trouble loading the application</h2>
+                    <p>Please try refreshing the page. If the problem persists, clearing your browser cache may help.</p>
+                    <button onclick="window.location.reload()" 
+                            style="background-color: #3b82f6; color: white; border: none; 
+                                   padding: 8px 16px; border-radius: 4px; cursor: pointer; 
+                                   font-size: 16px; margin-top: 16px;">
+                      Refresh Page
+                    </button>
+                  </div>
+                `;
+              }
+            }
+          }
+        }, 10000);
       });
 
       // Show error message if app fails to load within 10 seconds
-      setTimeout(function() {
-        var root = document.getElementById('root');
-        var fallback = document.getElementById('fallback-content');
-
-        // If fallback is still visible, show error message
-        if (fallback && getComputedStyle(fallback).display !== 'none') {
-          fallback.innerHTML = `
-            <h1>Password Generator</h1>
-            <p>If you're seeing this message, the application is having trouble loading.</p>
-            <div class="error-steps">
-              <p><strong>Please try the following:</strong></p>
-              <ol>
-                <li>Refresh the page</li>
-                <li>Clear your browser cache</li>
-                <li>Disable content blockers or security extensions</li>
-                <li>Try a different browser</li>
-                <li>Check your internet connection</li>
-              </ol>
-            </div>
-            <button onclick="window.location.reload()">Refresh Page</button>
-          `;
-
-          // Log the error
-          console.error('Application failed to load within 10 seconds');
-        }
-      }, 10000);
+      // ...existing code...
     </script>
   </body>
 </html>

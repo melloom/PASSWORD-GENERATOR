@@ -322,26 +322,107 @@ try {
 
   console.log("React rendered successfully");
 
-  // If we're using service worker, register it
+  // If we're using service worker, register it with improved update handling
   if (typeof serviceWorkerRegistration?.register === 'function') {
     serviceWorkerRegistration.register({
       onUpdate: registration => {
-        // Prompt user to refresh for new version
+        // Prompt user to refresh for new version with a nice UI instead of an alert
         if (registration && registration.waiting) {
-          if (window.confirm('New version available! Reload to update?')) {
+          const updateBanner = document.createElement('div');
+          updateBanner.style.position = 'fixed';
+          updateBanner.style.bottom = '0';
+          updateBanner.style.left = '0';
+          updateBanner.style.right = '0';
+          updateBanner.style.backgroundColor = '#2563eb';
+          updateBanner.style.color = 'white';
+          updateBanner.style.textAlign = 'center';
+          updateBanner.style.padding = '12px 20px';
+          updateBanner.style.zIndex = '9999';
+          updateBanner.style.display = 'flex';
+          updateBanner.style.justifyContent = 'space-between';
+          updateBanner.style.alignItems = 'center';
+          
+          updateBanner.innerHTML = `
+            <div>A new version is available!</div>
+            <button id="update-app-btn" style="background:#ffffff;color:#2563eb;border:none;padding:8px 16px;border-radius:4px;font-weight:600;cursor:pointer;">Update Now</button>
+          `;
+          
+          document.body.appendChild(updateBanner);
+          
+          document.getElementById('update-app-btn').addEventListener('click', () => {
             registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-            window.location.reload();
-          }
+            updateBanner.innerHTML = `
+              <div style="width:100%;text-align:center;">Updating... Please wait.</div>
+            `;
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          });
         }
+      },
+      onSuccess: registration => {
+        // Check for failures to load after service worker registration succeeds
+        setTimeout(() => {
+          // If the loader is still showing, force hide it
+          const loader = document.getElementById('enhanced-loader');
+          if (loader) {
+            console.log('Service worker registered but loader still showing - forcing removal');
+            loader.style.display = 'none';
+            if (loader.parentNode) {
+              loader.parentNode.removeChild(loader);
+            }
+          }
+        }, 3000);
       }
     });
+    
+    // Add a manual check for service worker updates
+    setInterval(() => {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.update().catch(err => {
+          console.error("Error updating service worker:", err);
+        });
+      });
+    }, 60 * 60 * 1000); // Check every hour
   }
 
   // Report web vitals
   reportWebVitals(() => {});
+  
+  // Failsafe for loading screen
+  const removeLoadingScreen = () => {
+    const loaderElements = [
+      'enhanced-loader',
+      'fallback-content',
+      'loading-screen',
+      'loading-overlay'
+    ];
+    
+    loaderElements.forEach(id => {
+      const element = document.getElementById(id);
+      if (element && element.style.display !== 'none') {
+        console.log(`Removing loader element: ${id}`);
+        element.style.display = 'none';
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      }
+    });
+  };
+  
+  // Multiple attempts to remove the loading screen
+  setTimeout(removeLoadingScreen, 2000);
+  setTimeout(removeLoadingScreen, 5000);
+  setTimeout(removeLoadingScreen, 10000);
 
 } catch (error) {
   console.error("Failed to initialize React application:", error);
+  
+  // Make sure to remove loading screen even on error
+  const loader = document.getElementById('enhanced-loader');
+  if (loader && loader.parentNode) {
+    loader.parentNode.removeChild(loader);
+  }
 
   // Display fallback UI
   const rootElement = document.getElementById('root');
